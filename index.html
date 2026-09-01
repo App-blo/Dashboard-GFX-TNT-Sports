@@ -535,9 +535,11 @@
     position:absolute;right:-5px;bottom:-5px;width:11px;height:11px;
     background:var(--accent);border-radius:2px;cursor:nwse-resize;
   }
-  .fmt-el-jugador{display:flex;flex-direction:column;align-items:center;overflow:hidden;}
-  .fmt-el-jugador img{width:100%;flex:1;object-fit:cover;object-position:top;min-height:0;}
-  .fmt-el-jugador .fmt-nombre{width:100%;text-align:center;padding:2px 4px;box-sizing:border-box;}
+  .fmt-el-jugador{overflow:hidden;}
+  .fmt-sub{position:absolute;overflow:hidden;}
+  .fmt-sub img{width:100%;height:100%;display:block;}
+  .fmt-sub.sel{outline:2px dashed var(--accent);outline-offset:-2px;}
+  .fmt-el-jugador .fmt-nombre{width:100%;height:100%;display:flex;padding:2px 4px;box-sizing:border-box;line-height:1.15;}
   .fmt-el-texto{display:flex;align-items:center;}
   .fmt-el-imagen img{width:100%;height:100%;object-fit:contain;display:block;}
 
@@ -546,6 +548,7 @@
     border-radius:10px;padding:14px;max-height:74vh;overflow-y:auto;
   }
   .fmt-inspector label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;}
+  .fmt-inspector input[type=number]{cursor:ew-resize;}
   .fmt-inspector input[type=text], .fmt-inspector input[type=number], .fmt-inspector select{
     width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
     border-radius:6px;padding:7px 8px;font-size:12.5px;
@@ -2821,6 +2824,7 @@ async function renderFlowicsDetail(){
 // "Limpiar formación" borra los jugadores puestos sin tocar el diseño.
 let fmtDoc = null;
 let fmtSelId = null;
+let fmtSelSub = null;   // pieza interna de la tarjeta seleccionada (foto/nombre/dorsal)
 let fmtZoom = 1;
 let fmtModo = 'editor';
 let fmtCtrlJugadores = [];   // plantel del equipo elegido en modo control
@@ -3120,7 +3124,7 @@ function fmtPintarElementos(canvas){
         node.dataset.id = el.id;
         node.innerHTML = fmtTarjetaJugadorHtml({
           nombre: el.refJugadorNombre || 'Nombre Apellido', dorsal: el.refDorsal || '10', jugadorId: el.refJugadorId || null
-        }, el);
+        }, el, el.id === fmtSelId ? fmtSelSub : null);
         if(el.id === fmtSelId){ const h = document.createElement('div'); h.className='fmt-handle'; node.appendChild(h); }
         canvas.appendChild(node);
       } else {
@@ -3154,6 +3158,7 @@ function fmtPintarElementos(canvas){
 // estilo de la imagen dentro de la tarjeta (se aplica a todos los jugadores por igual)
 function fmtEstiloImagen(mod){
   let s = `object-fit:${mod.imgFit||'cover'};object-position:${mod.imgPosX==null?50:mod.imgPosX}% ${mod.imgPosY==null?0:mod.imgPosY}%;`;
+  if(mod.imgZoom && mod.imgZoom !== 100) s += `transform:scale(${mod.imgZoom/100});`;
   if(mod.imgRadio) s += `border-radius:${mod.imgRadio}px;`;
   if(mod.imgBordeAncho) s += `border:${mod.imgBordeAncho}px solid ${fmtRgba(mod.imgBordeColor||'#ffffff', mod.imgBordeColorAlpha)};box-sizing:border-box;`;
   if(mod.imgSombra) s += `filter:drop-shadow(${mod.sombraX==null?0:mod.sombraX}px ${mod.sombraY==null?4:mod.sombraY}px ${mod.sombraBlur==null?8:mod.sombraBlur}px ${fmtRgba(mod.sombraColor||'#000000', mod.sombraColorAlpha==null?0.5:mod.sombraColorAlpha)});`;
@@ -3165,28 +3170,52 @@ function fmtEstiloImagen(mod){
   return s;
 }
 
-function fmtTarjetaJugadorHtml(p, mod){
+// Las piezas internas de la tarjeta (foto, nombre, dorsal) se posicionan libremente
+// dentro de ella y tienen su propio nivel de capa.
+function fmtSubs(mod){
+  const w = mod.tarjetaW||200, h = mod.tarjetaH||280;
+  if(!mod.sub) mod.sub = {};
+  if(!mod.sub.foto)   mod.sub.foto   = { x:0, y:0, w:w, h:Math.round(h*0.82), z:1 };
+  if(!mod.sub.nombre) mod.sub.nombre = { x:0, y:Math.round(h*0.82), w:w, h:Math.round(h*0.18), z:3 };
+  if(!mod.sub.dorsal) mod.sub.dorsal = { x:6, y:6, w:52, h:44, z:4 };
+  return mod.sub;
+}
+function fmtSubStyle(s){
+  return `left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px;z-index:${s.z==null?1:s.z};`;
+}
+
+function fmtTarjetaJugadorHtml(p, mod, subSel){
+  const S = fmtSubs(mod);
   const modo = mod.modoImagen || 'foto';
   const colorTarjeta = fmtPaintCss(mod, 'colorTarjeta');
-  let visual = '';
   const estiloImg = fmtEstiloImagen(mod);
+
+  let visual = '';
   if(modo === 'foto'){
     const url = p.jugadorId ? mediosCuerpoPorJugador[p.jugadorId] : null;
     visual = url ? `<img src="${escapeHtml(url)}" style="${estiloImg}" alt="">`
-                 : `<div style="flex:1;width:100%;background:${colorTarjeta};"></div>`;
+                 : `<div style="width:100%;height:100%;background:${colorTarjeta};"></div>`;
   } else if(modo === 'imagen-fija'){
     visual = mod.imagenFijaUrl ? `<img src="${escapeHtml(mod.imagenFijaUrl)}" style="${estiloImg}" alt="">`
-                               : `<div style="flex:1;width:100%;background:${colorTarjeta};"></div>`;
+                               : `<div style="width:100%;height:100%;background:${colorTarjeta};"></div>`;
   } else {
-    visual = `<div style="flex:1;width:100%;background:${colorTarjeta};"></div>`;
+    visual = `<div style="width:100%;height:100%;background:${colorTarjeta};"></div>`;
   }
-  const partes = [];
-  if(mod.mostrarDorsal) partes.push(`<span style="${fmtEstiloTexto(mod,'colorDorsal')}font-weight:700;">${escapeHtml(p.dorsal||'')}</span>`);
-  if(mod.mostrarNombre !== false) partes.push(escapeHtml(fmtNombreSegunFormato(p.nombre, mod.formatoNombre)));
-  const texto = partes.length
-    ? `<div class="fmt-nombre" style="${fmtEstiloTexto(mod,'color')}background:${mod.fondoTextoActivo ? fmtPaintCss(mod,'colorFondoTexto') : 'transparent'};font-size:${mod.fontSize||16}px;font-weight:${mod.bold?700:400};font-family:var(--sans);display:flex;gap:6px;justify-content:center;">${partes.join(' ')}</div>`
-    : '';
-  return visual + texto;
+
+  const piezas = [];
+  piezas.push(`<div class="fmt-sub${subSel==='foto'?' sel':''}" data-sub="foto" style="${fmtSubStyle(S.foto)}">${visual}</div>`);
+
+  if(mod.mostrarNombre !== false){
+    piezas.push(`<div class="fmt-sub${subSel==='nombre'?' sel':''}" data-sub="nombre" style="${fmtSubStyle(S.nombre)}">
+      <div class="fmt-nombre" style="${fmtEstiloTexto(mod,'color')}background:${mod.fondoTextoActivo ? fmtPaintCss(mod,'colorFondoTexto') : 'transparent'};font-size:${mod.fontSize||16}px;font-weight:${mod.bold?700:400};font-family:var(--sans);justify-content:${mod.alignNombre||'center'};align-items:${mod.vAlignNombre||'center'};">${escapeHtml(fmtNombreSegunFormato(p.nombre, mod.formatoNombre))}</div>
+    </div>`);
+  }
+  if(mod.mostrarDorsal){
+    piezas.push(`<div class="fmt-sub${subSel==='dorsal'?' sel':''}" data-sub="dorsal" style="${fmtSubStyle(S.dorsal)}">
+      <div class="fmt-nombre" style="${fmtEstiloTexto(mod,'colorDorsal')}background:${mod.fondoDorsalActivo ? fmtPaintCss(mod,'colorFondoDorsal') : 'transparent'};font-size:${mod.fontSizeDorsal||mod.fontSize||16}px;font-weight:700;font-family:var(--sans);justify-content:${mod.alignDorsal||'center'};align-items:center;">${escapeHtml(p.dorsal||'')}</div>
+    </div>`);
+  }
+  return piezas.join('');
 }
 
 function fmtContenidoHtml(el){
@@ -3265,6 +3294,33 @@ function fmtRenderPanelIzq(){
 }
 
 // ---- inspector (solo modo editor) ----
+// permite cambiar un número arrastrando el ratón sobre el campo (además de escribirlo)
+function fmtNumerosArrastrables(box, alCambiar){
+  box.querySelectorAll('input[type=number]').forEach(input => {
+    input.addEventListener('mousedown', (e) => {
+      const inicioX = e.clientX;
+      const valorInicial = parseFloat(input.value) || 0;
+      const paso = parseFloat(input.step) || 1;
+      let arrastrando = false;
+      const mover = (ev) => {
+        const dx = ev.clientX - inicioX;
+        if(!arrastrando && Math.abs(dx) < 3) return;  // clic normal si casi no se movió
+        if(!arrastrando){ arrastrando = true; document.body.style.cursor = 'ew-resize'; }
+        ev.preventDefault();
+        input.value = Math.round((valorInicial + dx * paso) * 100) / 100;
+        input.dispatchEvent(new Event('input', { bubbles:true }));
+      };
+      const soltar = () => {
+        window.removeEventListener('mousemove', mover);
+        window.removeEventListener('mouseup', soltar);
+        if(arrastrando){ document.body.style.cursor = ''; if(alCambiar) alCambiar(); }
+      };
+      window.addEventListener('mousemove', mover);
+      window.addEventListener('mouseup', soltar);
+    });
+  });
+}
+
 function fmtRenderInspector(){
   const box = document.getElementById('fmtInspector');
   const el = fmtDoc.elementos.find(e => e.id === fmtSelId);
@@ -3284,7 +3340,26 @@ function fmtRenderInspector(){
   }
 
   if(el.tipo === 'modulo-formacion'){
-    campos += `<p class="muted-note" style="margin:0 0 8px;">Define cómo se ve cada jugador. En modo Control agregas quiénes son y los mueves.</p>
+    const S = fmtSubs(el);
+    const s = fmtSelSub ? S[fmtSelSub] : null;
+    campos += `<p class="muted-note" style="margin:0 0 8px;">Define cómo se ve cada jugador. Haz clic en una pieza de la tarjeta para moverla.</p>
+      <label>Pieza de la tarjeta</label>
+      <div class="fmt-picker-row">
+        <button class="fmt-parada ${fmtSelSub==='foto'?'activa':''}" data-sub-sel="foto">Foto</button>
+        <button class="fmt-parada ${fmtSelSub==='nombre'?'activa':''}" data-sub-sel="nombre">Nombre</button>
+        <button class="fmt-parada ${fmtSelSub==='dorsal'?'activa':''}" data-sub-sel="dorsal">Dorsal</button>
+      </div>
+      ${s ? `
+        <div class="row2">
+          <div><label>X</label><input type="number" data-sub="x" value="${s.x}"></div>
+          <div><label>Y</label><input type="number" data-sub="y" value="${s.y}"></div>
+        </div>
+        <div class="row2">
+          <div><label>Ancho</label><input type="number" data-sub="w" value="${s.w}"></div>
+          <div><label>Alto</label><input type="number" data-sub="h" value="${s.h}"></div>
+        </div>
+        <label>Capa (mayor = más adelante)</label><input type="number" data-sub="z" value="${s.z==null?1:s.z}">
+        <hr style="border:none;border-top:1px solid var(--line);margin:12px 0;">` : ''}
       <label>Tamaño de tarjeta</label>
       <div class="row2">
         <div><input type="number" data-p="tarjetaW" value="${el.tarjetaW||200}"></div>
@@ -3306,10 +3381,12 @@ function fmtRenderInspector(){
           <option value="contain" ${el.imgFit==='contain'?'selected':''}>Contener (entra completa)</option>
         </select>
         <label>Encuadre horizontal / vertical (%)</label>
+        <p class="muted-note" style="margin:0 0 4px;font-size:10.5px;">Admite valores fuera de 0–100 (ej. -50 o 150) para correr la foto más allá del borde.</p>
         <div class="row2">
-          <div><input type="number" data-p="imgPosX" value="${el.imgPosX==null?50:el.imgPosX}" min="0" max="100"></div>
-          <div><input type="number" data-p="imgPosY" value="${el.imgPosY==null?0:el.imgPosY}" min="0" max="100"></div>
+          <div><input type="number" data-p="imgPosX" value="${el.imgPosX==null?50:el.imgPosX}" step="5"></div>
+          <div><input type="number" data-p="imgPosY" value="${el.imgPosY==null?0:el.imgPosY}" step="5"></div>
         </div>
+        <label>Zoom de la imagen (%)</label><input type="number" data-p="imgZoom" value="${el.imgZoom==null?100:el.imgZoom}" step="5">
         <label>Máscara</label>
         <select data-p="imgMascara">
           <option value="" ${!el.imgMascara?'selected':''}>Ninguna</option>
@@ -3332,6 +3409,19 @@ function fmtRenderInspector(){
       ` : ''}
       ${fmtColorAlphaHtml('Color de la tarjeta','colorTarjeta','colorTarjetaAlpha', el.colorTarjeta||'#0a2c3b', el.colorTarjetaAlpha)}
       <label><input type="checkbox" data-p="mostrarNombre" ${el.mostrarNombre === false ? '' : 'checked'}> Mostrar nombre</label>
+      <label>Alineación del nombre</label>
+      <div class="row2">
+        <div><select data-p="alignNombre">
+          <option value="flex-start" ${el.alignNombre==='flex-start'?'selected':''}>Izquierda</option>
+          <option value="center" ${!el.alignNombre||el.alignNombre==='center'?'selected':''}>Centro</option>
+          <option value="flex-end" ${el.alignNombre==='flex-end'?'selected':''}>Derecha</option>
+        </select></div>
+        <div><select data-p="vAlignNombre">
+          <option value="flex-start" ${el.vAlignNombre==='flex-start'?'selected':''}>Arriba</option>
+          <option value="center" ${!el.vAlignNombre||el.vAlignNombre==='center'?'selected':''}>Medio</option>
+          <option value="flex-end" ${el.vAlignNombre==='flex-end'?'selected':''}>Abajo</option>
+        </select></div>
+      </div>
       <label>Formato del nombre</label>
       <select data-p="formatoNombre">
         <option value="completo" ${!el.formatoNombre||el.formatoNombre==='completo'?'selected':''}>Nombre completo</option>
@@ -3339,6 +3429,9 @@ function fmtRenderInspector(){
         <option value="apellido" ${el.formatoNombre==='apellido'?'selected':''}>Solo apellido</option>
       </select>
       <label><input type="checkbox" data-p="mostrarDorsal" ${el.mostrarDorsal ? 'checked' : ''}> Mostrar dorsal</label>
+      ${el.mostrarDorsal ? `<label>Tamaño del dorsal</label><input type="number" data-p="fontSizeDorsal" value="${el.fontSizeDorsal||el.fontSize||16}">
+        <label><input type="checkbox" data-p="fondoDorsalActivo" ${el.fondoDorsalActivo?'checked':''}> Caja de fondo en el dorsal</label>
+        ${el.fondoDorsalActivo ? fmtColorAlphaHtml('Color de la caja del dorsal','colorFondoDorsal','colorFondoDorsalAlpha', el.colorFondoDorsal||'#001824', el.colorFondoDorsalAlpha==null?1:el.colorFondoDorsalAlpha) : ''}` : ''}
       ${fmtColorAlphaHtml('Color del texto','color','colorAlpha', el.color||'#ffffff', el.colorAlpha)}
       ${fmtColorAlphaHtml('Color del dorsal','colorDorsal','colorDorsalAlpha', el.colorDorsal||'#ff27ff', el.colorDorsalAlpha)}
       <label><input type="checkbox" data-p="fondoTextoActivo" ${el.fondoTextoActivo ? 'checked' : ''}> Caja de fondo en el texto</label>
@@ -3368,7 +3461,7 @@ function fmtRenderInspector(){
     input.addEventListener(evento, () => {
       const p = input.dataset.p;
       let v = input.type === 'checkbox' ? input.checked : input.value;
-      if(['x','y','w','h','fontSize','radio','tarjetaW','tarjetaH','imgRadio','imgBordeAncho','imgPosX','imgPosY','sombraX','sombraY','sombraBlur','mascaraCorte'].includes(p)) v = parseFloat(v) || 0;
+      if(['x','y','w','h','fontSize','radio','tarjetaW','tarjetaH','imgRadio','imgBordeAncho','imgPosX','imgPosY','sombraX','sombraY','sombraBlur','mascaraCorte','imgZoom'].includes(p)) v = parseFloat(v) || 0;
       if(p.endsWith('Alpha')){
         v = Math.max(0, Math.min(1, parseFloat(v) || 0));
         const span = input.parentElement.querySelector('.alpha-val');
@@ -3382,11 +3475,27 @@ function fmtRenderInspector(){
         el[p] = v;
       }
       // estos cambian qué controles se muestran, así que se redibuja el inspector
-      if(['modoImagen','fondoTextoActivo','imgMascara','imgSombra','imgBordeAncho'].includes(p)) fmtRender();
+      if(['modoImagen','fondoTextoActivo','imgMascara','imgSombra','imgBordeAncho','mostrarDorsal','mostrarNombre','fondoDorsalActivo'].includes(p)) fmtRender();
       else fmtRenderSoloCanvas();
     });
   });
   fmtEngancharSwatches(box, el, () => fmtRenderSoloCanvas());
+
+  // botones para elegir qué pieza de la tarjeta se edita
+  box.querySelectorAll('[data-sub-sel]').forEach(b => {
+    b.addEventListener('click', () => { fmtSelSub = b.dataset.subSel; fmtRender(); });
+  });
+  // campos de posición/tamaño/capa de la pieza seleccionada
+  if(el.tipo === 'modulo-formacion' && fmtSelSub){
+    const s = fmtSubs(el)[fmtSelSub];
+    box.querySelectorAll('[data-sub]').forEach(input => {
+      input.addEventListener('input', () => {
+        s[input.dataset.sub] = parseFloat(input.value) || 0;
+        fmtRenderSoloCanvas();
+      });
+    });
+  }
+  fmtNumerosArrastrables(box);
   const modImgBtn = box.querySelector('#fmtModImagenBtn');
   if(modImgBtn){
     const inp = box.querySelector('#fmtModImagenInput');
@@ -3525,19 +3634,35 @@ document.getElementById('fmtCtrlLimpiarBtn').addEventListener('click', () => {
   canvas.addEventListener('mousedown', (e) => {
     const handle = e.target.closest('.fmt-handle');
     const node = e.target.closest('.fmt-el');
-    if(!node){ fmtSelId = null; fmtRender(); return; }
+    if(!node){ fmtSelId = null; fmtSelSub = null; fmtRender(); return; }
     const esPuesto = node.dataset.puesto === '1';
     const obj = buscarObjetivo(node.dataset.id, esPuesto);
     if(!obj) return;
     // en modo control solo se mueven los jugadores puestos; en editor, todo lo demás
     if(fmtModo === 'control' && !esPuesto) return;
     if(fmtModo === 'editor' && esPuesto) return;
+
+    // dentro de la tarjeta de muestra: mover la pieza (foto, nombre o dorsal)
+    const subNode = e.target.closest('.fmt-sub');
+    if(fmtModo === 'editor' && obj.tipo === 'modulo-formacion' && subNode && !handle){
+      fmtSelId = obj.id;
+      fmtSelSub = subNode.dataset.sub;
+      const s = fmtSubs(obj)[fmtSelSub];
+      objetivo = s; modo = 'move';
+      startX = e.clientX; startY = e.clientY;
+      orig = { x:s.x, y:s.y, w:s.w, h:s.h };
+      fmtRender();
+      e.preventDefault();
+      return;
+    }
+    fmtSelSub = null;
     fmtSelId = obj.id;
     objetivo = obj;
     modo = handle ? 'resize' : 'move';
     startX = e.clientX; startY = e.clientY;
-    const mod = fmtModulo();
-    orig = { x: obj.x, y: obj.y, w: obj.w || (mod?mod.tarjetaW:200), h: obj.h || (mod?mod.tarjetaH:280) };
+    orig = obj.tipo === 'modulo-formacion'
+      ? { x: obj.x, y: obj.y, w: obj.tarjetaW||200, h: obj.tarjetaH||280 }
+      : { x: obj.x, y: obj.y, w: obj.w, h: obj.h };
     fmtRender();
     e.preventDefault();
   });
@@ -3547,6 +3672,14 @@ document.getElementById('fmtCtrlLimpiarBtn').addEventListener('click', () => {
     const dx = (e.clientX - startX) / fmtZoom;
     const dy = (e.clientY - startY) / fmtZoom;
     if(modo === 'move'){ objetivo.x = Math.round(orig.x + dx); objetivo.y = Math.round(orig.y + dy); }
+    else if(fmtSelSub && objetivo && objetivo.z != null){
+      objetivo.w = Math.max(10, Math.round(orig.w + dx));
+      objetivo.h = Math.max(10, Math.round(orig.h + dy));
+    }
+    else if(objetivo.tipo === 'modulo-formacion'){
+      objetivo.tarjetaW = Math.max(20, Math.round(orig.w + dx));
+      objetivo.tarjetaH = Math.max(20, Math.round(orig.h + dy));
+    }
     else if(objetivo.w != null){ objetivo.w = Math.max(20, Math.round(orig.w + dx)); objetivo.h = Math.max(20, Math.round(orig.h + dy)); }
     fmtRenderSoloCanvas();
   });
