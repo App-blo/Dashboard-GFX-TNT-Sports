@@ -221,6 +221,14 @@
     background:var(--panel);border:1px solid var(--line);border-radius:10px;
     padding:12px 14px;margin-bottom:8px;
   }
+  .act-jugador-row .crest, .act-jugador-row .crest-ph{
+    width:38px;height:38px;border-radius:50%;flex-shrink:0;object-fit:cover;
+    object-position:top center;background:var(--panel-2);
+  }
+  .act-jugador-row .crest-ph{
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+    color:var(--muted);border:1px solid var(--line);
+  }
   .act-jugador-row .admin-name, .act-jugador-row .muted-note{
     min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
@@ -367,7 +375,7 @@
   .admin-row.active-camp-row{border-color:var(--accent);}
   .admin-name-click{cursor:pointer;}
   .admin-name-click:hover{color:var(--accent);}
-  .admin-row .crest, .admin-row .crest-ph{ width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--panel-2); }
+  .admin-row .crest, .admin-row .crest-ph{ width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:top center;flex-shrink:0;background:var(--panel-2); }
   .admin-row .crest-ph{
     display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
     color:var(--muted);border:1px solid var(--line);
@@ -450,6 +458,42 @@
   .fmt-jug-item.puesto{opacity:.4;}
   .fmt-jug-item .dorsal{font-family:var(--mono);color:var(--accent);min-width:24px;text-align:right;}
   .fmt-jug-item .nom{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+  /* selector de color propio */
+  .fmt-swatch{
+    display:flex;align-items:center;gap:8px;cursor:pointer;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:5px 7px;
+  }
+  .fmt-swatch:hover{border-color:var(--accent);}
+  .fmt-swatch-color{
+    width:26px;height:20px;border-radius:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.15);
+    background-image:linear-gradient(45deg,#555 25%,transparent 25%),linear-gradient(-45deg,#555 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#555 75%),linear-gradient(-45deg,transparent 75%,#555 75%);
+    background-size:8px 8px;background-position:0 0,0 4px,4px -4px,-4px 0;
+  }
+  .fmt-swatch-txt{font-family:var(--mono);font-size:10.5px;color:var(--muted);}
+
+  .fmt-picker{
+    position:absolute;z-index:200;width:226px;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  .fmt-sv{position:relative;height:120px;border-radius:6px;cursor:crosshair;margin-bottom:8px;}
+  .fmt-sv-punto{position:absolute;width:11px;height:11px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 3px rgba(0,0,0,.6);pointer-events:none;}
+  .fmt-bar{position:relative;height:13px;border-radius:7px;cursor:pointer;margin-bottom:8px;}
+  .fmt-hue{background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);}
+  .fmt-alpha{
+    background-color:transparent;
+    background-image:linear-gradient(45deg,#555 25%,transparent 25%),linear-gradient(-45deg,#555 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#555 75%),linear-gradient(-45deg,transparent 75%,#555 75%);
+    background-size:8px 8px;background-position:0 0,0 4px,4px -4px,-4px 0;
+  }
+  .fmt-bar-punto{position:absolute;top:50%;width:13px;height:13px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 3px rgba(0,0,0,.6);pointer-events:none;}
+  .fmt-picker-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+  .fmt-hex{flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:5px;padding:5px 7px;font-family:var(--mono);font-size:11.5px;}
+  .fmt-picker-check{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);margin:4px 0 7px;cursor:pointer;}
+  .fmt-parada{flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);border-radius:5px;padding:5px;font-size:11px;cursor:pointer;}
+  .fmt-parada.activa{border-color:var(--accent);color:var(--accent);}
+  .fmt-grad-ang{flex:1;accent-color:var(--accent);}
+  .fmt-grad-preview{height:16px;border-radius:5px;border:1px solid var(--line);}
 
   /* color con transparencia */
   .fmt-color-alpha{display:flex;gap:6px;align-items:center;}
@@ -2762,6 +2806,179 @@ let fmtZoom = 1;
 let fmtModo = 'editor';
 let fmtCtrlJugadores = [];   // plantel del equipo elegido en modo control
 
+// ---- selector de color propio: transparencia integrada + gradiente simple ----
+// El picker nativo del navegador no admite canal alfa ni gradientes, por eso se construye acá.
+// Cada propiedad de color usa tres campos: <prop> (hex), <prop>Alpha (0-1) y <prop>Grad ({activo,color,alpha,angulo}).
+function fmtHexARgb(hex){
+  const h = String(hex||'#000000').replace('#','');
+  const n = parseInt(h.length === 3 ? h.split('').map(x=>x+x).join('') : h, 16);
+  return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+}
+function fmtRgbAHex(r,g,b){
+  return '#' + [r,g,b].map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function fmtRgbAHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max-min;
+  let h = 0;
+  if(d){
+    if(max===r) h = ((g-b)/d) % 6;
+    else if(max===g) h = (b-r)/d + 2;
+    else h = (r-g)/d + 4;
+    h *= 60; if(h<0) h += 360;
+  }
+  return { h, s: max ? d/max : 0, v: max };
+}
+function fmtHsvAHex(h,s,v){
+  const c = v*s, x = c*(1-Math.abs(((h/60)%2)-1)), m = v-c;
+  let rgb;
+  if(h<60) rgb=[c,x,0]; else if(h<120) rgb=[x,c,0]; else if(h<180) rgb=[0,c,x];
+  else if(h<240) rgb=[0,x,c]; else if(h<300) rgb=[x,0,c]; else rgb=[c,0,x];
+  return fmtRgbAHex((rgb[0]+m)*255, (rgb[1]+m)*255, (rgb[2]+m)*255);
+}
+// devuelve el CSS final de una propiedad: color plano o gradiente
+function fmtPaintCss(el, prop){
+  const g = el[prop+'Grad'];
+  const base = fmtRgba(el[prop]||'#000000', el[prop+'Alpha']);
+  if(g && g.activo) return `linear-gradient(${g.angulo==null?90:g.angulo}deg, ${base}, ${fmtRgba(g.color||'#000000', g.alpha)})`;
+  return base;
+}
+function fmtEsGrad(el, prop){ const g = el[prop+'Grad']; return !!(g && g.activo); }
+// estilo para pintar TEXTO (con gradiente se recorta el degradado sobre las letras)
+function fmtEstiloTexto(el, prop){
+  if(fmtEsGrad(el, prop)){
+    return `background-image:${fmtPaintCss(el,prop)};-webkit-background-clip:text;background-clip:text;color:transparent;`;
+  }
+  return `color:${fmtRgba(el[prop]||'#ffffff', el[prop+'Alpha'])};`;
+}
+
+let fmtPickerPanel = null;
+function fmtCerrarPicker(){ if(fmtPickerPanel){ fmtPickerPanel.remove(); fmtPickerPanel = null; } }
+document.addEventListener('mousedown', (e) => {
+  if(fmtPickerPanel && !e.target.closest('.fmt-picker') && !e.target.closest('.fmt-swatch')) fmtCerrarPicker();
+});
+
+function fmtAbrirPicker(swatch, el, prop, onChange){
+  fmtCerrarPicker();
+  if(!el[prop+'Grad']) el[prop+'Grad'] = { activo:false, color:'#000000', alpha:1, angulo:90 };
+  const g = el[prop+'Grad'];
+  const panel = document.createElement('div');
+  panel.className = 'fmt-picker';
+  fmtPickerPanel = panel;
+  document.body.appendChild(panel);
+
+  // "parada" que se está editando: 1 = color base, 2 = segundo color del gradiente
+  let parada = 1;
+  const leer = () => parada === 1
+    ? { hex: el[prop]||'#000000', alpha: el[prop+'Alpha'] == null ? 1 : el[prop+'Alpha'] }
+    : { hex: g.color||'#000000', alpha: g.alpha == null ? 1 : g.alpha };
+  const escribir = (hex, alpha) => {
+    if(parada === 1){ el[prop] = hex; el[prop+'Alpha'] = alpha; }
+    else { g.color = hex; g.alpha = alpha; }
+    pintarPanel(); onChange();
+  };
+
+  function pintarPanel(){
+    const { hex, alpha } = leer();
+    const { r,gg,b } = (({r,g,b}) => ({r, gg:g, b}))(fmtHexARgb(hex));
+    const hsv = fmtRgbAHsv(r,gg,b);
+    const hueHex = fmtHsvAHex(hsv.h, 1, 1);
+    panel.innerHTML = `
+      <div class="fmt-sv" style="background:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,${hueHex});">
+        <div class="fmt-sv-punto" style="left:${hsv.s*100}%;top:${(1-hsv.v)*100}%;"></div>
+      </div>
+      <div class="fmt-bar fmt-hue"><div class="fmt-bar-punto" style="left:${(hsv.h/360)*100}%;"></div></div>
+      <div class="fmt-bar fmt-alpha" style="--c:${hueHex};background-image:linear-gradient(to right, transparent, ${fmtRgba(hex,1)});">
+        <div class="fmt-bar-punto" style="left:${alpha*100}%;"></div>
+      </div>
+      <div class="fmt-picker-row">
+        <input type="text" class="fmt-hex" value="${hex}" spellcheck="false">
+        <span class="muted-note">${Math.round(alpha*100)}%</span>
+      </div>
+      <label class="fmt-picker-check"><input type="checkbox" class="fmt-grad-on" ${g.activo?'checked':''}> Gradiente</label>
+      ${g.activo ? `
+        <div class="fmt-picker-row">
+          <button class="fmt-parada ${parada===1?'activa':''}" data-parada="1">Color 1</button>
+          <button class="fmt-parada ${parada===2?'activa':''}" data-parada="2">Color 2</button>
+        </div>
+        <div class="fmt-picker-row">
+          <span class="muted-note">Ángulo</span>
+          <input type="range" class="fmt-grad-ang" min="0" max="360" step="1" value="${g.angulo==null?90:g.angulo}">
+          <span class="muted-note">${g.angulo==null?90:g.angulo}°</span>
+        </div>
+        <div class="fmt-grad-preview" style="background:${fmtPaintCss(el,prop)};"></div>` : ''}
+    `;
+    enganchar(hsv, hex, alpha);
+  }
+
+  function enganchar(hsv, hex, alpha){
+    const sv = panel.querySelector('.fmt-sv');
+    const hue = panel.querySelector('.fmt-hue');
+    const alp = panel.querySelector('.fmt-alpha');
+
+    const arrastrar = (elemento, cb) => {
+      const mover = (ev) => {
+        const rect = elemento.getBoundingClientRect();
+        const px = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+        const py = Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height));
+        cb(px, py);
+      };
+      elemento.addEventListener('mousedown', (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        mover(ev);
+        const mm = e2 => mover(e2);
+        const mu = () => { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); };
+        window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu);
+      });
+    };
+    arrastrar(sv, (px, py) => escribir(fmtHsvAHex(hsv.h, px, 1-py), alpha));
+    arrastrar(hue, (px) => escribir(fmtHsvAHex(px*360, hsv.s || 1, hsv.v || 1), alpha));
+    arrastrar(alp, (px) => escribir(hex, Math.round(px*100)/100));
+
+    const hexInput = panel.querySelector('.fmt-hex');
+    hexInput.addEventListener('change', () => {
+      let v = hexInput.value.trim();
+      if(!v.startsWith('#')) v = '#' + v;
+      if(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)) escribir(v, alpha);
+      else hexInput.value = hex;
+    });
+    hexInput.addEventListener('mousedown', e => e.stopPropagation());
+
+    panel.querySelector('.fmt-grad-on').addEventListener('change', (ev) => {
+      g.activo = ev.target.checked;
+      if(!g.activo) parada = 1;
+      pintarPanel(); onChange();
+    });
+    panel.querySelectorAll('.fmt-parada').forEach(b => b.addEventListener('click', () => { parada = parseInt(b.dataset.parada); pintarPanel(); }));
+    const ang = panel.querySelector('.fmt-grad-ang');
+    if(ang) ang.addEventListener('input', () => { g.angulo = parseInt(ang.value); pintarPanel(); onChange(); });
+  }
+
+  const r = swatch.getBoundingClientRect();
+  panel.style.left = Math.min(window.innerWidth - 240, r.left) + 'px';
+  panel.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  pintarPanel();
+}
+
+// swatch que abre el selector (reemplaza al input de color nativo)
+function fmtColorAlphaHtml(labelTxt, propColor, propAlpha, valColor, valAlpha){
+  return `<label>${labelTxt}</label><div class="fmt-swatch" data-swatch="${propColor}"><span class="fmt-swatch-color"></span><span class="fmt-swatch-txt"></span></div>`;
+}
+// conecta todos los swatches del inspector con el selector
+function fmtEngancharSwatches(box, el, onChange){
+  box.querySelectorAll('[data-swatch]').forEach(sw => {
+    const prop = sw.dataset.swatch;
+    const pintar = () => {
+      sw.querySelector('.fmt-swatch-color').style.background = fmtPaintCss(el, prop);
+      sw.querySelector('.fmt-swatch-txt').textContent = fmtEsGrad(el, prop)
+        ? 'gradiente'
+        : `${el[prop]||'#000000'} · ${Math.round((el[prop+'Alpha'] == null ? 1 : el[prop+'Alpha'])*100)}%`;
+    };
+    pintar();
+    sw.addEventListener('click', () => fmtAbrirPicker(sw, el, prop, () => { pintar(); onChange(); }));
+  });
+}
+
 function fmtDocPorDefecto(){
   return { canvas:{ w:1920, h:1080, bg:'#001824', bgAlpha:1, transparente:true }, elementos:[], formacion:{ campId:null, equipoId:null, puestos:[] } };
 }
@@ -2774,16 +2991,6 @@ function fmtRgba(hex, alpha){
   const h = String(hex || '#000000').replace('#','');
   const n = parseInt(h.length === 3 ? h.split('').map(x=>x+x).join('') : h, 16);
   return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${alpha})`;
-}
-// arma un control de color con barra de transparencia al lado
-function fmtColorAlphaHtml(labelTxt, propColor, propAlpha, valColor, valAlpha){
-  const a = valAlpha == null ? 1 : valAlpha;
-  return `<label>${labelTxt}</label>
-    <div class="fmt-color-alpha">
-      <input type="color" data-p="${propColor}" value="${valColor}">
-      <input type="range" min="0" max="1" step="0.05" data-p="${propAlpha}" value="${a}">
-      <span class="alpha-val">${Math.round(a*100)}%</span>
-    </div>`;
 }
 // nombre del jugador según el formato elegido en el módulo
 function fmtNombreSegunFormato(nombreCompleto, formato){
@@ -2890,7 +3097,7 @@ function fmtPintarElementos(canvas){
 // cómo se ve una tarjeta de jugador — el estilo lo define el módulo (plantilla)
 function fmtTarjetaJugadorHtml(p, mod){
   const modo = mod.modoImagen || 'foto';
-  const colorTarjeta = fmtRgba(mod.colorTarjeta||'#0a2c3b', mod.colorTarjetaAlpha);
+  const colorTarjeta = fmtPaintCss(mod, 'colorTarjeta');
   let visual = '';
   if(modo === 'foto'){
     const url = p.jugadorId ? mediosCuerpoPorJugador[p.jugadorId] : null;
@@ -2903,20 +3110,20 @@ function fmtTarjetaJugadorHtml(p, mod){
     visual = `<div style="flex:1;width:100%;background:${colorTarjeta};"></div>`;
   }
   const partes = [];
-  if(mod.mostrarDorsal) partes.push(`<span style="color:${fmtRgba(mod.colorDorsal||'#ff27ff', mod.colorDorsalAlpha)};font-weight:700;">${escapeHtml(p.dorsal||'')}</span>`);
+  if(mod.mostrarDorsal) partes.push(`<span style="${fmtEstiloTexto(mod,'colorDorsal')}font-weight:700;">${escapeHtml(p.dorsal||'')}</span>`);
   if(mod.mostrarNombre !== false) partes.push(escapeHtml(fmtNombreSegunFormato(p.nombre, mod.formatoNombre)));
   const texto = partes.length
-    ? `<div class="fmt-nombre" style="color:${fmtRgba(mod.color||'#ffffff', mod.colorAlpha)};background:${fmtRgba(mod.colorFondoTexto||'#001824', mod.colorFondoTextoAlpha == null ? 0 : mod.colorFondoTextoAlpha)};font-size:${mod.fontSize||16}px;font-weight:${mod.bold?700:400};font-family:var(--sans);display:flex;gap:6px;justify-content:center;">${partes.join(' ')}</div>`
+    ? `<div class="fmt-nombre" style="${fmtEstiloTexto(mod,'color')}background:${mod.fondoTextoActivo ? fmtPaintCss(mod,'colorFondoTexto') : 'transparent'};font-size:${mod.fontSize||16}px;font-weight:${mod.bold?700:400};font-family:var(--sans);display:flex;gap:6px;justify-content:center;">${partes.join(' ')}</div>`
     : '';
   return visual + texto;
 }
 
 function fmtContenidoHtml(el){
   if(el.tipo === 'texto'){
-    return `<div style="width:100%;color:${fmtRgba(el.color||'#ffffff', el.colorAlpha)};font-size:${el.fontSize||32}px;font-weight:${el.bold?700:400};text-align:${el.align||'left'};font-family:var(--sans);">${escapeHtml(el.texto||'Texto')}</div>`;
+    return `<div style="width:100%;${fmtEstiloTexto(el,'color')}font-size:${el.fontSize||32}px;font-weight:${el.bold?700:400};text-align:${el.align||'left'};font-family:var(--sans);">${escapeHtml(el.texto||'Texto')}</div>`;
   }
   if(el.tipo === 'forma'){
-    return `<div style="width:100%;height:100%;background:${fmtRgba(el.colorFondo||'#ff27ff', el.colorFondoAlpha)};border-radius:${el.radio||0}px;"></div>`;
+    return `<div style="width:100%;height:100%;background:${fmtPaintCss(el,'colorFondo')};border-radius:${el.radio||0}px;"></div>`;
   }
   if(el.tipo === 'imagen'){
     return el.url ? `<img src="${escapeHtml(el.url)}" alt="">` : '<div style="width:100%;height:100%;background:#0a2c3b;"></div>';
@@ -3030,7 +3237,8 @@ function fmtRenderInspector(){
       <label><input type="checkbox" data-p="mostrarDorsal" ${el.mostrarDorsal ? 'checked' : ''}> Mostrar dorsal</label>
       ${fmtColorAlphaHtml('Color del texto','color','colorAlpha', el.color||'#ffffff', el.colorAlpha)}
       ${fmtColorAlphaHtml('Color del dorsal','colorDorsal','colorDorsalAlpha', el.colorDorsal||'#ff27ff', el.colorDorsalAlpha)}
-      ${fmtColorAlphaHtml('Fondo del texto','colorFondoTexto','colorFondoTextoAlpha', el.colorFondoTexto||'#001824', el.colorFondoTextoAlpha == null ? 0 : el.colorFondoTextoAlpha)}
+      <label><input type="checkbox" data-p="fondoTextoActivo" ${el.fondoTextoActivo ? 'checked' : ''}> Caja de fondo en el texto</label>
+      ${el.fondoTextoActivo ? fmtColorAlphaHtml('Color de la caja','colorFondoTexto','colorFondoTextoAlpha', el.colorFondoTexto||'#001824', el.colorFondoTextoAlpha == null ? 1 : el.colorFondoTextoAlpha) : ''}
       <label>Tamaño de fuente</label><input type="number" data-p="fontSize" value="${el.fontSize||16}">
       <label><input type="checkbox" data-p="bold" ${el.bold?'checked':''}> Negrita</label>`;
   }
@@ -3063,9 +3271,10 @@ function fmtRenderInspector(){
         if(span) span.textContent = Math.round(v*100) + '%';
       }
       el[p] = v;
-      if(p === 'modoImagen') fmtRender(); else fmtRenderSoloCanvas();
+      if(p === 'modoImagen' || p === 'fondoTextoActivo') fmtRender(); else fmtRenderSoloCanvas();
     });
   });
+  fmtEngancharSwatches(box, el, () => fmtRenderSoloCanvas());
   const modImgBtn = box.querySelector('#fmtModImagenBtn');
   if(modImgBtn){
     const inp = box.querySelector('#fmtModImagenInput');
