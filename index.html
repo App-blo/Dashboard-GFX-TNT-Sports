@@ -1180,9 +1180,13 @@ document.getElementById('sidebarToggle').addEventListener('click', () => {
   toggleIcon.textContent = collapsed ? '☰' : '✕';
 });
 
-sb.auth.onAuthStateChange((_event, session) => { updateAuthUI(session); });
+// en modo output (?output=...) no hay login ni interfaz: solo la gráfica
+const esModoOutput = !!new URLSearchParams(location.search).get('output');
+
+sb.auth.onAuthStateChange((_event, session) => { if(!esModoOutput) updateAuthUI(session); });
 
 async function updateAuthUI(session){
+  if(esModoOutput) return;
   if(session){
     loginScreen.style.display = 'none';
     appRoot.style.display = 'flex';
@@ -2930,6 +2934,8 @@ async function initOutputMode(controlId){
   document.getElementById('appRoot').style.display = 'none';
   document.body.style.background = 'transparent';
   document.body.style.padding = '0';
+  document.body.style.margin = '0';
+  document.documentElement.style.background = 'transparent';
 
   const cont = document.createElement('div');
   cont.id = 'outputRoot';
