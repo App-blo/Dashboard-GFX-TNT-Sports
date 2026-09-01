@@ -413,6 +413,42 @@
   .club-detail-actions button{white-space:nowrap;}
 
   /* ---- editor de formaciones ---- */
+  .fmt-modo-switch{display:flex;gap:6px;margin-bottom:12px;}
+  .fmt-modo-btn{
+    font-family:var(--mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+    background:var(--panel);border:1px solid var(--line);color:var(--muted);
+    padding:9px 16px;border-radius:9px;cursor:pointer;
+  }
+  .fmt-modo-btn.active{background:var(--panel-2);color:var(--accent);border-color:var(--accent);}
+
+  .fmt-panel-izq{
+    width:210px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:12px;max-height:74vh;overflow-y:auto;
+  }
+  .fmt-panel-titulo{
+    font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:8px;
+  }
+  .fmt-capa{
+    display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;
+    border:1px solid transparent;cursor:pointer;font-size:12px;margin-bottom:3px;
+  }
+  .fmt-capa:hover{background:var(--panel-2);}
+  .fmt-capa.selected{background:var(--panel-2);border-color:var(--accent);color:var(--accent);}
+  .fmt-capa .nombre{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .fmt-capa .ojo{opacity:.6;cursor:pointer;font-size:11px;}
+  .fmt-capa .mover{color:var(--muted);cursor:pointer;font-size:10px;padding:0 2px;}
+  .fmt-capa .mover:hover{color:var(--accent);}
+
+  .fmt-jug-item{
+    display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;
+    cursor:pointer;font-size:12px;margin-bottom:2px;border:1px solid transparent;
+  }
+  .fmt-jug-item:hover{background:var(--panel-2);border-color:var(--accent);}
+  .fmt-jug-item.puesto{opacity:.4;}
+  .fmt-jug-item .dorsal{font-family:var(--mono);color:var(--accent);min-width:20px;}
+  .fmt-jug-item .nom{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
   .fmt-toolbar{
     display:flex;align-items:center;gap:8px;flex-wrap:wrap;
     background:var(--panel);border:1px solid var(--line);border-radius:10px;
@@ -877,8 +913,14 @@
       </div>
 
       <div id="flowicsTipo-formacion" style="display:none;">
-        <div class="fmt-toolbar">
-          <button class="ghost" data-add="jugador">+ Tarjeta jugador</button>
+        <div class="fmt-modo-switch">
+          <button class="fmt-modo-btn active" data-modo="editor">Editor · diseño</button>
+          <button class="fmt-modo-btn" data-modo="control">Control · en vivo</button>
+        </div>
+
+        <!-- barra del modo EDITOR -->
+        <div class="fmt-toolbar" id="fmtToolbarEditor">
+          <button class="ghost" data-add="modulo-formacion">+ Módulo formación</button>
           <button class="ghost" data-add="texto">+ Texto</button>
           <button class="ghost" data-add="forma">+ Forma</button>
           <button class="ghost" id="fmtAddImagenBtn">+ Imagen</button>
@@ -891,12 +933,25 @@
           <label class="muted-note">Fondo <input type="color" id="fmtCanvasBg" value="#001824"></label>
           <label class="muted-note"><input type="checkbox" id="fmtCanvasTransp" checked> transparente</label>
           <span class="fmt-sep"></span>
-          <button class="ghost" id="fmtDeleteElBtn">Eliminar elemento</button>
-          <button class="primary" id="fmtSaveBtn">Guardar</button>
+          <button class="ghost" id="fmtDeleteElBtn">Eliminar</button>
+          <button class="primary" id="fmtSaveBtn">Guardar diseño</button>
           <button class="ghost" id="fmtOutputBtn">Link para Flowics</button>
         </div>
 
+        <!-- barra del modo CONTROL -->
+        <div class="fmt-toolbar" id="fmtToolbarControl" style="display:none;">
+          <label class="muted-note">Equipo
+            <select id="fmtCtrlEquipo"><option value="">— elegí un equipo —</option></select>
+          </label>
+          <span class="fmt-sep"></span>
+          <button class="ghost danger" id="fmtCtrlLimpiarBtn">Limpiar formación</button>
+          <button class="primary" id="fmtCtrlGuardarBtn">Guardar formación</button>
+          <button class="ghost" id="fmtCtrlOutputBtn">Link para Flowics</button>
+          <span class="muted-note" id="fmtCtrlInfo"></span>
+        </div>
+
         <div class="fmt-workspace">
+          <aside class="fmt-panel-izq" id="fmtPanelIzq"></aside>
           <div class="fmt-canvas-wrap">
             <div id="fmtCanvas"></div>
           </div>
@@ -2685,31 +2740,53 @@ async function renderFlowicsDetail(){
 }
 
 // ================== EDITOR DE FORMACIONES (tipo: formacion) ==================
-// El diseño completo (lienzo + elementos con sus posiciones y estilos) se guarda
-// como JSON en el campo config del control. La vista de output lo lee y lo pinta igual.
-let fmtDoc = null;          // { canvas:{w,h,bg,transparente}, elementos:[...] }
+// Dos modos sobre el mismo lienzo:
+//   EDITOR  -> define el DISEÑO: qué elementos hay y cómo se ve cada jugador (plantilla)
+//   CONTROL -> opera EN VIVO: elige equipo, agrega jugadores a la cancha y los arrastra
+// El diseño y la formación se guardan juntos en config del control, pero son independientes:
+// "Limpiar formación" borra los jugadores puestos sin tocar el diseño.
+let fmtDoc = null;
 let fmtSelId = null;
 let fmtZoom = 1;
+let fmtModo = 'editor';
+let fmtCtrlJugadores = [];   // plantel del equipo elegido en modo control
 
 function fmtDocPorDefecto(){
-  return { canvas:{ w:1920, h:1080, bg:'#001824', transparente:true }, elementos:[] };
+  return { canvas:{ w:1920, h:1080, bg:'#001824', transparente:true }, elementos:[], formacion:{ equipoId:null, puestos:[] } };
 }
 function fmtNuevoId(){ return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function fmtModulo(){ return fmtDoc.elementos.find(e => e.tipo === 'modulo-formacion'); }
 
 function fmtCargarDoc(ctrl){
   fmtDoc = (ctrl.config && ctrl.config.doc) ? JSON.parse(JSON.stringify(ctrl.config.doc)) : fmtDocPorDefecto();
+  if(!fmtDoc.formacion) fmtDoc.formacion = { equipoId:null, puestos:[] };
   fmtSelId = null;
   document.getElementById('fmtCanvasW').value = fmtDoc.canvas.w;
   document.getElementById('fmtCanvasH').value = fmtDoc.canvas.h;
   document.getElementById('fmtCanvasBg').value = fmtDoc.canvas.bg || '#001824';
   document.getElementById('fmtCanvasTransp').checked = !!fmtDoc.canvas.transparente;
-  fmtRender();
+  fmtSetModo('editor');
 }
 
+// ---- cambio de modo ----
+function fmtSetModo(modo){
+  fmtModo = modo;
+  document.querySelectorAll('.fmt-modo-btn').forEach(b => b.classList.toggle('active', b.dataset.modo === modo));
+  document.getElementById('fmtToolbarEditor').style.display = modo === 'editor' ? 'flex' : 'none';
+  document.getElementById('fmtToolbarControl').style.display = modo === 'control' ? 'flex' : 'none';
+  document.getElementById('fmtInspector').style.display = modo === 'editor' ? 'block' : 'none';
+  fmtSelId = null;
+  if(modo === 'control') fmtCtrlInit();
+  fmtRender();
+}
+document.querySelectorAll('.fmt-modo-btn').forEach(btn => {
+  btn.addEventListener('click', () => fmtSetModo(btn.dataset.modo));
+});
+
+// ---- render del lienzo ----
 function fmtRender(){
   const canvas = document.getElementById('fmtCanvas');
   const wrap = canvas.parentElement;
-  // escala para que el lienzo entre en el ancho disponible
   const dispo = wrap.clientWidth - 28;
   fmtZoom = Math.min(1, dispo / fmtDoc.canvas.w);
   canvas.style.width = fmtDoc.canvas.w + 'px';
@@ -2717,36 +2794,85 @@ function fmtRender(){
   canvas.style.transform = `scale(${fmtZoom})`;
   wrap.style.height = (fmtDoc.canvas.h * fmtZoom + 28) + 'px';
   canvas.style.background = fmtDoc.canvas.transparente ? 'transparent' : fmtDoc.canvas.bg;
+  fmtPintarElementos(canvas);
+  fmtRenderPanelIzq();
+  if(fmtModo === 'editor') fmtRenderInspector();
+}
+function fmtRenderSoloCanvas(){
+  const canvas = document.getElementById('fmtCanvas');
+  canvas.style.background = fmtDoc.canvas.transparente ? 'transparent' : fmtDoc.canvas.bg;
+  fmtPintarElementos(canvas);
+}
 
+function fmtPintarElementos(canvas){
   canvas.innerHTML = '';
   fmtDoc.elementos.forEach(el => {
+    if(el.visible === false) return;
+    if(el.tipo === 'modulo-formacion'){
+      // el módulo no se dibuja: dibuja a los jugadores que tenga puestos
+      fmtDoc.formacion.puestos.forEach(p => {
+        const node = document.createElement('div');
+        node.className = 'fmt-el fmt-el-jugador' + (p.id === fmtSelId ? ' selected' : '');
+        node.style.left = p.x + 'px'; node.style.top = p.y + 'px';
+        node.style.width = (el.tarjetaW||200) + 'px'; node.style.height = (el.tarjetaH||280) + 'px';
+        node.dataset.id = p.id; node.dataset.puesto = '1';
+        node.innerHTML = fmtTarjetaJugadorHtml(p, el);
+        if(p.id === fmtSelId && fmtModo === 'control'){
+          const h = document.createElement('div'); h.className = 'fmt-handle'; node.appendChild(h);
+        }
+        canvas.appendChild(node);
+      });
+      // en modo editor, si el módulo está vacío se muestra una tarjeta de muestra
+      if(fmtModo === 'editor' && fmtDoc.formacion.puestos.length === 0){
+        const node = document.createElement('div');
+        node.className = 'fmt-el fmt-el-jugador' + (el.id === fmtSelId ? ' selected' : '');
+        node.style.left = el.x + 'px'; node.style.top = el.y + 'px';
+        node.style.width = (el.tarjetaW||200) + 'px'; node.style.height = (el.tarjetaH||280) + 'px';
+        node.style.opacity = '.75';
+        node.dataset.id = el.id;
+        node.innerHTML = fmtTarjetaJugadorHtml({ nombre:'JUGADOR', dorsal:'10' }, el);
+        if(el.id === fmtSelId){ const h = document.createElement('div'); h.className='fmt-handle'; node.appendChild(h); }
+        canvas.appendChild(node);
+      }
+      return;
+    }
     const node = document.createElement('div');
     node.className = 'fmt-el fmt-el-' + el.tipo + (el.id === fmtSelId ? ' selected' : '');
-    node.style.left = el.x + 'px';
-    node.style.top = el.y + 'px';
-    node.style.width = el.w + 'px';
-    node.style.height = el.h + 'px';
+    node.style.left = el.x + 'px'; node.style.top = el.y + 'px';
+    node.style.width = el.w + 'px'; node.style.height = el.h + 'px';
     node.dataset.id = el.id;
     node.innerHTML = fmtContenidoHtml(el);
-    if(el.id === fmtSelId){
-      const handle = document.createElement('div');
-      handle.className = 'fmt-handle';
-      node.appendChild(handle);
+    if(el.id === fmtSelId && fmtModo === 'editor'){
+      const h = document.createElement('div'); h.className = 'fmt-handle'; node.appendChild(h);
     }
     canvas.appendChild(node);
   });
-  fmtRenderInspector();
+}
+
+// cómo se ve una tarjeta de jugador — el estilo lo define el módulo (plantilla)
+function fmtTarjetaJugadorHtml(p, mod){
+  const modo = mod.modoImagen || 'foto';
+  let visual = '';
+  if(modo === 'foto'){
+    const url = p.jugadorId ? mediosCuerpoPorJugador[p.jugadorId] : null;
+    visual = url ? `<img src="${escapeHtml(url)}" alt="">`
+                 : `<div style="flex:1;width:100%;background:${escapeHtml(mod.colorTarjeta||'#0a2c3b')};"></div>`;
+  } else if(modo === 'imagen-fija'){
+    visual = mod.imagenFijaUrl ? `<img src="${escapeHtml(mod.imagenFijaUrl)}" alt="">`
+                               : `<div style="flex:1;width:100%;background:${escapeHtml(mod.colorTarjeta||'#0a2c3b')};"></div>`;
+  } else {
+    visual = `<div style="flex:1;width:100%;background:${escapeHtml(mod.colorTarjeta||'#0a2c3b')};"></div>`;
+  }
+  const partes = [];
+  if(mod.mostrarDorsal) partes.push(`<span style="color:${escapeHtml(mod.colorDorsal||mod.color||'#ff27ff')};font-weight:700;">${escapeHtml(p.dorsal||'')}</span>`);
+  if(mod.mostrarNombre !== false) partes.push(escapeHtml(p.nombre||''));
+  const texto = partes.length
+    ? `<div class="fmt-nombre" style="color:${escapeHtml(mod.color||'#ffffff')};background:${escapeHtml(mod.colorFondoTexto||'transparent')};font-size:${mod.fontSize||16}px;font-weight:${mod.bold?700:400};font-family:var(--sans);display:flex;gap:6px;justify-content:center;">${partes.join(' ')}</div>`
+    : '';
+  return visual + texto;
 }
 
 function fmtContenidoHtml(el){
-  if(el.tipo === 'jugador'){
-    const j = el.jugadorId ? allJugadoresMaestro.find(x => x.id === el.jugadorId) : null;
-    const foto = j ? mediosCuerpoPorJugador[j.id] : null;
-    const nombre = j ? j.nombre_tv : '(sin jugador)';
-    return `
-      ${foto ? `<img src="${escapeHtml(foto)}" alt="">` : `<div style="flex:1;width:100%;background:${escapeHtml(el.colorFondo||'#0a2c3b')};"></div>`}
-      ${el.mostrarNombre === false ? '' : `<div class="fmt-nombre" style="color:${escapeHtml(el.color||'#ffffff')};background:${escapeHtml(el.colorFondo||'transparent')};font-size:${el.fontSize||16}px;font-weight:${el.bold?700:400};font-family:var(--sans);">${escapeHtml(nombre)}</div>`}`;
-  }
   if(el.tipo === 'texto'){
     return `<div style="width:100%;color:${escapeHtml(el.color||'#ffffff')};font-size:${el.fontSize||32}px;font-weight:${el.bold?700:400};text-align:${el.align||'left'};font-family:var(--sans);">${escapeHtml(el.texto||'Texto')}</div>`;
   }
@@ -2759,28 +2885,91 @@ function fmtContenidoHtml(el){
   return '';
 }
 
-// ---- inspector de propiedades ----
+// ---- panel izquierdo: capas (editor) o jugadores (control) ----
+function fmtRenderPanelIzq(){
+  const box = document.getElementById('fmtPanelIzq');
+  if(fmtModo === 'editor'){
+    const items = [...fmtDoc.elementos].reverse(); // el último dibujado es el de más arriba
+    box.innerHTML = `<div class="fmt-panel-titulo">Capas</div>` + (items.length ? '' : '<p class="muted-note">Sin elementos.</p>');
+    items.forEach((el, idxRev) => {
+      const idx = fmtDoc.elementos.length - 1 - idxRev;
+      const nombre = el.tipo === 'modulo-formacion' ? 'Módulo formación'
+                   : el.tipo === 'texto' ? `Texto: ${(el.texto||'').slice(0,14)}`
+                   : el.tipo === 'imagen' ? 'Imagen' : 'Forma';
+      const div = document.createElement('div');
+      div.className = 'fmt-capa' + (el.id === fmtSelId ? ' selected' : '');
+      div.innerHTML = `<span class="ojo" title="Mostrar/ocultar">${el.visible === false ? '○' : '●'}</span>
+        <span class="nombre">${escapeHtml(nombre)}</span>
+        <span class="mover" data-dir="up" title="Subir">▲</span><span class="mover" data-dir="down" title="Bajar">▼</span>`;
+      div.addEventListener('click', (e) => {
+        if(e.target.classList.contains('ojo')){ el.visible = el.visible === false; fmtRender(); return; }
+        if(e.target.classList.contains('mover')){
+          const dir = e.target.dataset.dir === 'up' ? 1 : -1;
+          const destino = idx + dir;
+          if(destino < 0 || destino >= fmtDoc.elementos.length) return;
+          const [m] = fmtDoc.elementos.splice(idx, 1);
+          fmtDoc.elementos.splice(destino, 0, m);
+          fmtRender(); return;
+        }
+        fmtSelId = el.id; fmtRender();
+      });
+      box.appendChild(div);
+    });
+  } else {
+    // modo control: lista de jugadores del equipo elegido
+    const puestos = new Set(fmtDoc.formacion.puestos.map(p => p.jugadorId));
+    box.innerHTML = `<div class="fmt-panel-titulo">Jugadores</div>` +
+      (fmtCtrlJugadores.length ? '' : '<p class="muted-note">Elegí un equipo arriba.</p>');
+    fmtCtrlJugadores.forEach(j => {
+      const div = document.createElement('div');
+      div.className = 'fmt-jug-item' + (puestos.has(j.jugador_id) ? ' puesto' : '');
+      div.innerHTML = `<span class="dorsal">${escapeHtml(j.n||'')}</span><span class="nom">${escapeHtml(j.nombre||'')}</span>`;
+      div.title = puestos.has(j.jugador_id) ? 'Ya está en la cancha' : 'Clic para agregar a la cancha';
+      div.addEventListener('click', () => fmtCtrlAgregarJugador(j));
+      box.appendChild(div);
+    });
+  }
+}
+
+// ---- inspector (solo modo editor) ----
 function fmtRenderInspector(){
   const box = document.getElementById('fmtInspector');
   const el = fmtDoc.elementos.find(e => e.id === fmtSelId);
-  if(!el){ box.innerHTML = '<p class="muted-note">Seleccioná un elemento para editar sus propiedades.</p>'; return; }
+  if(!el){ box.innerHTML = '<p class="muted-note">Seleccioná un elemento o una capa para editar sus propiedades.</p>'; return; }
 
-  let campos = `
-    <div class="row2">
-      <div><label>X</label><input type="number" data-p="x" value="${el.x}"></div>
-      <div><label>Y</label><input type="number" data-p="y" value="${el.y}"></div>
-    </div>
-    <div class="row2">
-      <div><label>Ancho</label><input type="number" data-p="w" value="${el.w}"></div>
-      <div><label>Alto</label><input type="number" data-p="h" value="${el.h}"></div>
-    </div>`;
+  let campos = '';
+  if(el.tipo !== 'modulo-formacion'){
+    campos += `
+      <div class="row2">
+        <div><label>X</label><input type="number" data-p="x" value="${el.x}"></div>
+        <div><label>Y</label><input type="number" data-p="y" value="${el.y}"></div>
+      </div>
+      <div class="row2">
+        <div><label>Ancho</label><input type="number" data-p="w" value="${el.w}"></div>
+        <div><label>Alto</label><input type="number" data-p="h" value="${el.h}"></div>
+      </div>`;
+  }
 
-  if(el.tipo === 'jugador'){
-    campos += `<label>Jugador</label>
-      <input type="text" list="actingsJugadoresDatalist" data-p="jugadorNombre" value="${escapeHtml(el.jugadorNombre||'')}" placeholder="Buscar jugador…">
+  if(el.tipo === 'modulo-formacion'){
+    campos += `<p class="muted-note" style="margin:0 0 8px;">Define cómo se ve cada jugador. En modo Control agregás quiénes son y los movés.</p>
+      <label>Tamaño de tarjeta</label>
+      <div class="row2">
+        <div><input type="number" data-p="tarjetaW" value="${el.tarjetaW||200}"></div>
+        <div><input type="number" data-p="tarjetaH" value="${el.tarjetaH||280}"></div>
+      </div>
+      <label>Mostrar al jugador como</label>
+      <select data-p="modoImagen">
+        <option value="foto" ${el.modoImagen==='foto'||!el.modoImagen?'selected':''}>Foto del jugador</option>
+        <option value="imagen-fija" ${el.modoImagen==='imagen-fija'?'selected':''}>Imagen fija (camiseta)</option>
+        <option value="solo-color" ${el.modoImagen==='solo-color'?'selected':''}>Solo color</option>
+      </select>
+      ${el.modoImagen === 'imagen-fija' ? `<label>Imagen fija</label><button class="ghost" id="fmtModImagenBtn" style="width:100%;">Subir imagen…</button><input type="file" id="fmtModImagenInput" accept="image/*" style="display:none;">` : ''}
+      <label>Color de la tarjeta</label><input type="color" data-p="colorTarjeta" value="${el.colorTarjeta||'#0a2c3b'}">
       <label><input type="checkbox" data-p="mostrarNombre" ${el.mostrarNombre === false ? '' : 'checked'}> Mostrar nombre</label>
+      <label><input type="checkbox" data-p="mostrarDorsal" ${el.mostrarDorsal ? 'checked' : ''}> Mostrar dorsal</label>
       <label>Color del texto</label><input type="color" data-p="color" value="${el.color||'#ffffff'}">
-      <label>Fondo del nombre</label><input type="color" data-p="colorFondo" value="${el.colorFondo||'#001824'}">
+      <label>Color del dorsal</label><input type="color" data-p="colorDorsal" value="${el.colorDorsal||'#ff27ff'}">
+      <label>Fondo del texto</label><input type="color" data-p="colorFondoTexto" value="${el.colorFondoTexto||'#001824'}">
       <label>Tamaño de fuente</label><input type="number" data-p="fontSize" value="${el.fontSize||16}">
       <label><input type="checkbox" data-p="bold" ${el.bold?'checked':''}> Negrita</label>`;
   }
@@ -2800,55 +2989,45 @@ function fmtRenderInspector(){
       <label>Redondeo</label><input type="number" data-p="radio" value="${el.radio||0}">
       <label>Opacidad (0 a 1)</label><input type="number" step="0.05" min="0" max="1" data-p="opacidad" value="${el.opacidad==null?1:el.opacidad}">`;
   }
-  box.innerHTML = `<p class="muted-note" style="margin:0 0 4px;">${el.tipo}</p>` + campos;
+  box.innerHTML = campos;
 
   box.querySelectorAll('[data-p]').forEach(input => {
     const evento = (input.type === 'checkbox' || input.tagName === 'SELECT' || input.type === 'color') ? 'change' : 'input';
     input.addEventListener(evento, () => {
       const p = input.dataset.p;
       let v = input.type === 'checkbox' ? input.checked : input.value;
-      if(['x','y','w','h','fontSize','radio'].includes(p)) v = parseFloat(v) || 0;
+      if(['x','y','w','h','fontSize','radio','tarjetaW','tarjetaH'].includes(p)) v = parseFloat(v) || 0;
       if(p === 'opacidad') v = Math.max(0, Math.min(1, parseFloat(v) || 0));
-      if(p === 'jugadorNombre'){
-        el.jugadorNombre = v;
-        const j = resolveJugadorPorTexto(v);
-        el.jugadorId = j ? j.id : null;
-      } else {
-        el[p] = v;
-      }
-      fmtRenderSoloCanvas();
+      el[p] = v;
+      if(p === 'modoImagen') fmtRender(); else fmtRenderSoloCanvas();
     });
   });
-}
-// redibuja solo el lienzo, sin tocar el inspector (para no perder el foco mientras se escribe)
-function fmtRenderSoloCanvas(){
-  const canvas = document.getElementById('fmtCanvas');
-  canvas.style.background = fmtDoc.canvas.transparente ? 'transparent' : fmtDoc.canvas.bg;
-  canvas.innerHTML = '';
-  fmtDoc.elementos.forEach(el => {
-    const node = document.createElement('div');
-    node.className = 'fmt-el fmt-el-' + el.tipo + (el.id === fmtSelId ? ' selected' : '');
-    node.style.left = el.x + 'px';
-    node.style.top = el.y + 'px';
-    node.style.width = el.w + 'px';
-    node.style.height = el.h + 'px';
-    node.dataset.id = el.id;
-    node.innerHTML = fmtContenidoHtml(el);
-    if(el.id === fmtSelId){
-      const handle = document.createElement('div');
-      handle.className = 'fmt-handle';
-      node.appendChild(handle);
-    }
-    canvas.appendChild(node);
-  });
+  const modImgBtn = box.querySelector('#fmtModImagenBtn');
+  if(modImgBtn){
+    const inp = box.querySelector('#fmtModImagenInput');
+    modImgBtn.addEventListener('click', () => inp.click());
+    inp.addEventListener('change', async (e) => {
+      const file = e.target.files[0]; if(!file) return;
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+      const path = `mod_${flowicsDetailId}_${Date.now()}.${ext}`;
+      const { error } = await sb.storage.from('graficas').upload(path, file, { upsert:true, contentType:file.type });
+      if(error){ alert('Error subiendo la imagen: ' + error.message); return; }
+      const { data: pub } = sb.storage.from('graficas').getPublicUrl(path);
+      el.imagenFijaUrl = pub.publicUrl;
+      fmtRender();
+    });
+  }
 }
 
-// ---- agregar elementos ----
+// ---- agregar elementos (modo editor) ----
 document.querySelectorAll('#flowicsTipo-formacion [data-add]').forEach(btn => {
   btn.addEventListener('click', () => {
     const tipo = btn.dataset.add;
-    const base = { id: fmtNuevoId(), tipo, x: 60, y: 60 };
-    if(tipo === 'jugador') Object.assign(base, { w: 200, h: 280, color:'#ffffff', colorFondo:'#001824', fontSize:16, bold:true, mostrarNombre:true });
+    if(tipo === 'modulo-formacion' && fmtModulo()){ alert('Este diseño ya tiene un módulo de formación.'); return; }
+    const base = { id: fmtNuevoId(), tipo, x: 60, y: 60, visible: true };
+    if(tipo === 'modulo-formacion') Object.assign(base, { w:200, h:280, tarjetaW:200, tarjetaH:280, modoImagen:'foto',
+      colorTarjeta:'#0a2c3b', color:'#ffffff', colorDorsal:'#ff27ff', colorFondoTexto:'#001824',
+      fontSize:16, bold:true, mostrarNombre:true, mostrarDorsal:false });
     if(tipo === 'texto') Object.assign(base, { w: 400, h: 60, texto:'Texto', color:'#ffffff', fontSize:32, align:'left', bold:true });
     if(tipo === 'forma') Object.assign(base, { w: 300, h: 120, colorFondo:'#ff27ff', radio:8, opacidad:1 });
     fmtDoc.elementos.push(base);
@@ -2865,7 +3044,7 @@ document.getElementById('fmtImagenInput').addEventListener('change', async (e) =
   const { error } = await sb.storage.from('graficas').upload(path, file, { upsert: true, contentType: file.type });
   if(error){ alert('Error subiendo la imagen: ' + error.message); return; }
   const { data: pub } = sb.storage.from('graficas').getPublicUrl(path);
-  const el = { id: fmtNuevoId(), tipo:'imagen', x:60, y:60, w:400, h:300, url: pub.publicUrl };
+  const el = { id: fmtNuevoId(), tipo:'imagen', x:60, y:60, w:400, h:300, url: pub.publicUrl, visible:true };
   fmtDoc.elementos.push(el);
   fmtSelId = el.id;
   fmtRender();
@@ -2878,36 +3057,95 @@ document.getElementById('fmtDeleteElBtn').addEventListener('click', () => {
   fmtRender();
 });
 
+// ---- modo CONTROL: equipo, jugadores, limpiar ----
+async function fmtCtrlInit(){
+  const sel = document.getElementById('fmtCtrlEquipo');
+  const { data: eqs } = await sb.from('equipos')
+    .select('id,nombre,campeonato_id,clubes(nombre),campeonatos(nombre)')
+    .order('nombre').limit(2000);
+  sel.innerHTML = '<option value="">— elegí un equipo —</option>' +
+    (eqs||[]).map(e => `<option value="${e.id}">${escapeHtml((e.clubes&&e.clubes.nombre)||e.nombre)} · ${escapeHtml((e.campeonatos&&e.campeonatos.nombre)||'')}</option>`).join('');
+  if(fmtDoc.formacion.equipoId){ sel.value = fmtDoc.formacion.equipoId; await fmtCtrlCargarPlantel(fmtDoc.formacion.equipoId); }
+  fmtCtrlActualizarInfo();
+}
+async function fmtCtrlCargarPlantel(equipoId){
+  const { data } = await sb.from('plantel_jugadores')
+    .select('id,n,nombre,jugador_id,jugadores_maestro!jugador_id(nombre_tv)')
+    .eq('equipo_id', equipoId).limit(200);
+  fmtCtrlJugadores = (data||[]).map(p => ({
+    ...p, nombre: (p.jugadores_maestro && p.jugadores_maestro.nombre_tv) || p.nombre
+  })).sort((a,b) => (parseInt(a.n)||99) - (parseInt(b.n)||99));
+  fmtRenderPanelIzq();
+}
+document.getElementById('fmtCtrlEquipo').addEventListener('change', async (e) => {
+  fmtDoc.formacion.equipoId = e.target.value || null;
+  fmtCtrlJugadores = [];
+  if(e.target.value) await fmtCtrlCargarPlantel(e.target.value);
+  fmtRenderPanelIzq();
+});
+function fmtCtrlAgregarJugador(j){
+  const mod = fmtModulo();
+  if(!mod){ alert('Primero agregá un módulo de formación en el modo Editor.'); return; }
+  if(fmtDoc.formacion.puestos.some(p => p.jugadorId === j.jugador_id)) return;
+  const n = fmtDoc.formacion.puestos.length;
+  fmtDoc.formacion.puestos.push({
+    id: fmtNuevoId(), jugadorId: j.jugador_id, nombre: j.nombre, dorsal: j.n || '',
+    x: mod.x + (n % 5) * ((mod.tarjetaW||200) + 20),
+    y: mod.y + Math.floor(n / 5) * ((mod.tarjetaH||280) + 20),
+  });
+  fmtRender();
+  fmtCtrlActualizarInfo();
+}
+function fmtCtrlActualizarInfo(){
+  document.getElementById('fmtCtrlInfo').textContent = `${fmtDoc.formacion.puestos.length} en cancha`;
+}
+document.getElementById('fmtCtrlLimpiarBtn').addEventListener('click', () => {
+  if(!fmtDoc.formacion.puestos.length) return;
+  if(!confirm('¿Sacar a todos los jugadores de la cancha? El diseño no se toca.')) return;
+  fmtDoc.formacion.puestos = [];
+  fmtSelId = null;
+  fmtRender();
+  fmtCtrlActualizarInfo();
+});
+
 // ---- lienzo: seleccionar, arrastrar, redimensionar ----
 (function fmtInitCanvasEvents(){
   const canvas = document.getElementById('fmtCanvas');
-  let modo = null, startX = 0, startY = 0, orig = null;
+  let modo = null, startX = 0, startY = 0, orig = null, objetivo = null;
 
+  function buscarObjetivo(id, esPuesto){
+    return esPuesto ? fmtDoc.formacion.puestos.find(p => p.id === id)
+                    : fmtDoc.elementos.find(x => x.id === id);
+  }
   canvas.addEventListener('mousedown', (e) => {
     const handle = e.target.closest('.fmt-handle');
     const node = e.target.closest('.fmt-el');
     if(!node){ fmtSelId = null; fmtRender(); return; }
-    const el = fmtDoc.elementos.find(x => x.id === node.dataset.id);
-    if(!el) return;
-    fmtSelId = el.id;
+    const esPuesto = node.dataset.puesto === '1';
+    const obj = buscarObjetivo(node.dataset.id, esPuesto);
+    if(!obj) return;
+    // en modo control solo se mueven los jugadores puestos; en editor, todo lo demás
+    if(fmtModo === 'control' && !esPuesto) return;
+    if(fmtModo === 'editor' && esPuesto) return;
+    fmtSelId = obj.id;
+    objetivo = obj;
     modo = handle ? 'resize' : 'move';
     startX = e.clientX; startY = e.clientY;
-    orig = { x: el.x, y: el.y, w: el.w, h: el.h };
+    const mod = fmtModulo();
+    orig = { x: obj.x, y: obj.y, w: obj.w || (mod?mod.tarjetaW:200), h: obj.h || (mod?mod.tarjetaH:280) };
     fmtRender();
     e.preventDefault();
   });
 
   window.addEventListener('mousemove', (e) => {
-    if(!modo || !fmtSelId) return;
-    const el = fmtDoc.elementos.find(x => x.id === fmtSelId);
-    if(!el) return;
+    if(!modo || !objetivo) return;
     const dx = (e.clientX - startX) / fmtZoom;
     const dy = (e.clientY - startY) / fmtZoom;
-    if(modo === 'move'){ el.x = Math.round(orig.x + dx); el.y = Math.round(orig.y + dy); }
-    else { el.w = Math.max(20, Math.round(orig.w + dx)); el.h = Math.max(20, Math.round(orig.h + dy)); }
+    if(modo === 'move'){ objetivo.x = Math.round(orig.x + dx); objetivo.y = Math.round(orig.y + dy); }
+    else if(objetivo.w != null){ objetivo.w = Math.max(20, Math.round(orig.w + dx)); objetivo.h = Math.max(20, Math.round(orig.h + dy)); }
     fmtRenderSoloCanvas();
   });
-  window.addEventListener('mouseup', () => { if(modo){ modo = null; fmtRenderInspector(); } });
+  window.addEventListener('mouseup', () => { if(modo){ modo = null; objetivo = null; if(fmtModo === 'editor') fmtRenderInspector(); } });
 })();
 
 // ---- lienzo: tamaño y fondo ----
@@ -2918,23 +3156,27 @@ document.getElementById('fmtDeleteElBtn').addEventListener('click', () => {
     fmtRender();
   });
 });
-document.getElementById('fmtCanvasBg').addEventListener('change', (e) => { fmtDoc.canvas.bg = e.target.value; fmtRender(); });
-document.getElementById('fmtCanvasTransp').addEventListener('change', (e) => { fmtDoc.canvas.transparente = e.target.checked; fmtRender(); });
+document.getElementById('fmtCanvasBg').addEventListener('change', (e) => { fmtDoc.canvas.bg = e.target.value; fmtRenderSoloCanvas(); });
+document.getElementById('fmtCanvasTransp').addEventListener('change', (e) => { fmtDoc.canvas.transparente = e.target.checked; fmtRenderSoloCanvas(); });
 
 // ---- guardar y link de output ----
-document.getElementById('fmtSaveBtn').addEventListener('click', async () => {
+async function fmtGuardar(mensaje){
   const ctrl = flowicsControles.find(c => c.id === flowicsDetailId);
   if(!ctrl) return;
   const config = { ...(ctrl.config||{}), doc: fmtDoc };
   const { error } = await sb.from('flowics_controles').update({ config, updated_at: new Date().toISOString() }).eq('id', ctrl.id);
   if(error){ alert('Error guardando: ' + error.message); return; }
   ctrl.config = config;
-  alert('Diseño guardado.');
-});
-document.getElementById('fmtOutputBtn').addEventListener('click', () => {
+  alert(mensaje);
+}
+document.getElementById('fmtSaveBtn').addEventListener('click', () => fmtGuardar('Diseño guardado.'));
+document.getElementById('fmtCtrlGuardarBtn').addEventListener('click', () => fmtGuardar('Formación guardada — ya se ve al aire.'));
+function fmtMostrarLinkOutput(){
   const url = location.origin + location.pathname + '?output=' + flowicsDetailId;
   prompt('Pegá esta URL como external content en Flowics:', url);
-});
+}
+document.getElementById('fmtOutputBtn').addEventListener('click', fmtMostrarLinkOutput);
+document.getElementById('fmtCtrlOutputBtn').addEventListener('click', fmtMostrarLinkOutput);
 
 // ================== VISTA OUTPUT (lo que carga Flowics) ==================
 // Se activa con ?output=<id del control> en la URL. Muestra solo la gráfica,
@@ -2965,9 +3207,16 @@ async function initOutputMode(controlId){
 
     // escala el diseño para que ocupe la ventana manteniendo la proporción
     const escala = Math.min(window.innerWidth / doc.canvas.w, window.innerHeight / doc.canvas.h);
-    cont.innerHTML = `<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(${escala});width:${doc.canvas.w}px;height:${doc.canvas.h}px;background:${doc.canvas.transparente?'transparent':doc.canvas.bg};">
-      ${doc.elementos.map(el => `<div class="fmt-el fmt-el-${el.tipo}" style="position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">${fmtContenidoHtml(el)}</div>`).join('')}
-    </div>`;
+    const mod = doc.elementos.find(e => e.tipo === 'modulo-formacion');
+    const puestos = (doc.formacion && doc.formacion.puestos) || [];
+    const piezas = doc.elementos.filter(el => el.visible !== false).map(el => {
+      if(el.tipo === 'modulo-formacion'){
+        // el módulo dibuja a los jugadores que estén puestos en la cancha
+        return puestos.map(p => `<div class="fmt-el fmt-el-jugador" style="position:absolute;left:${p.x}px;top:${p.y}px;width:${el.tarjetaW||200}px;height:${el.tarjetaH||280}px;">${fmtTarjetaJugadorHtml(p, el)}</div>`).join('');
+      }
+      return `<div class="fmt-el fmt-el-${el.tipo}" style="position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">${fmtContenidoHtml(el)}</div>`;
+    }).join('');
+    cont.innerHTML = `<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(${escala});width:${doc.canvas.w}px;height:${doc.canvas.h}px;background:${doc.canvas.transparente?'transparent':doc.canvas.bg};">${piezas}</div>`;
   }
   await pintar();
   window.addEventListener('resize', pintar);
