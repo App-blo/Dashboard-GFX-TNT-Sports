@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TNT Sports · Área Gráfica</title>
+<script>
+  // Modo output (?output=...): se marca el documento ANTES de que cargue nada más,
+  // para que el CSS oculte el login y la app al instante. Sin esto, la interfaz
+  // podría alcanzar a mostrarse un momento antes de que corra el resto del script.
+  if(new URLSearchParams(location.search).get('output')) document.documentElement.classList.add('modo-output');
+</script>
+<style>
+  html.modo-output, html.modo-output body{background:transparent !important;padding:0 !important;margin:0 !important;}
+  html.modo-output #loginScreen, html.modo-output #appRoot{display:none !important;}
+</style>
 <style>
   @font-face {
     font-family: 'TNT Sports Sans';
