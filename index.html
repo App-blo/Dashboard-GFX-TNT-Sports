@@ -217,7 +217,7 @@
   .led[data-estado="procesada"]{background:#23c88b;box-shadow:0 0 6px rgba(35,200,139,.5);}
 
   .act-jugador-row{
-    display:grid;grid-template-columns:34px 210px 190px 130px 130px 1fr;align-items:center;gap:14px;
+    display:grid;grid-template-columns:34px 210px 190px 175px 175px 1fr;align-items:center;gap:14px;
     background:var(--panel);border:1px solid var(--line);border-radius:10px;
     padding:12px 14px;margin-bottom:8px;
   }
@@ -233,14 +233,18 @@
     min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   .act-grid-header{
-    display:grid;grid-template-columns:34px 210px 190px 130px 130px 1fr;gap:14px;
+    display:grid;grid-template-columns:34px 210px 190px 175px 175px 1fr;gap:14px;
     padding:0 14px 8px;
   }
   .act-grid-header .act-col-title{
     font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
   }
   .act-kit-group{display:flex;align-items:center;}
-  .act-kit-group .leds{display:flex;gap:6px;}
+  .act-kit-group .leds{display:grid;grid-template-columns:repeat(5,35px);justify-items:center;}
+  .act-kit-head{display:grid;grid-template-columns:repeat(5,35px);justify-items:center;row-gap:4px;}
+  .act-tipo-lbl{
+    font-family:var(--mono);font-size:8.5px;letter-spacing:.04em;color:var(--muted);cursor:help;
+  }
 
   .filelist{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
   .filerow{
@@ -486,6 +490,7 @@
     background-image:linear-gradient(45deg,#555 25%,transparent 25%),linear-gradient(-45deg,#555 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#555 75%),linear-gradient(-45deg,transparent 75%,#555 75%);
     background-size:8px 8px;background-position:0 0,0 4px,4px -4px,-4px 0;
   }
+  .fmt-alpha-relleno{position:absolute;inset:0;border-radius:7px;pointer-events:none;}
   .fmt-bar-punto{position:absolute;top:50%;width:13px;height:13px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 3px rgba(0,0,0,.6);pointer-events:none;}
   .fmt-picker-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
   .fmt-hex{flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:5px;padding:5px 7px;font-family:var(--mono);font-size:11.5px;}
@@ -899,8 +904,22 @@
         </div>
         <div class="act-grid-header">
           <span></span><span></span><span></span>
-          <span class="act-col-title">Local</span>
-          <span class="act-col-title">Visita</span>
+          <div class="act-kit-head">
+            <span class="act-col-title" style="grid-column:1/-1;">Local</span>
+            <span class="act-tipo-lbl" title="Cuerpo completo frontal">FRO</span>
+            <span class="act-tipo-lbl" title="Cuerpo completo lateral izquierda">IZQ</span>
+            <span class="act-tipo-lbl" title="Cuerpo completo lateral derecha">DER</span>
+            <span class="act-tipo-lbl" title="Medio cuerpo">MED</span>
+            <span class="act-tipo-lbl" title="Busto">BUS</span>
+          </div>
+          <div class="act-kit-head">
+            <span class="act-col-title" style="grid-column:1/-1;">Visita</span>
+            <span class="act-tipo-lbl" title="Cuerpo completo frontal">FRO</span>
+            <span class="act-tipo-lbl" title="Cuerpo completo lateral izquierda">IZQ</span>
+            <span class="act-tipo-lbl" title="Cuerpo completo lateral derecha">DER</span>
+            <span class="act-tipo-lbl" title="Medio cuerpo">MED</span>
+            <span class="act-tipo-lbl" title="Busto">BUS</span>
+          </div>
         </div>
         <div id="actingsGridList"></div>
         <div class="empty" id="actingsGridEmpty" style="display:none;">No se encontraron jugadores.</div>
@@ -2867,33 +2886,33 @@ function fmtAbrirPicker(swatch, el, prop, onChange){
   fmtPickerPanel = panel;
   document.body.appendChild(panel);
 
-  // "parada" que se está editando: 1 = color base, 2 = segundo color del gradiente
-  let parada = 1;
+  let parada = 1;              // 1 = color base, 2 = segundo color del gradiente
+  let hsv = { h:0, s:1, v:1 }; // se mantiene aparte para no perder el tono al bajar a negro
+
   const leer = () => parada === 1
     ? { hex: el[prop]||'#000000', alpha: el[prop+'Alpha'] == null ? 1 : el[prop+'Alpha'] }
     : { hex: g.color||'#000000', alpha: g.alpha == null ? 1 : g.alpha };
-  const escribir = (hex, alpha) => {
+  const guardar = (hex, alpha) => {
     if(parada === 1){ el[prop] = hex; el[prop+'Alpha'] = alpha; }
     else { g.color = hex; g.alpha = alpha; }
-    pintarPanel(); onChange();
+  };
+  const sincronizarHsvDesdeValor = () => {
+    const { r, g:gg, b } = fmtHexARgb(leer().hex);
+    const nuevo = fmtRgbAHsv(r, gg, b);
+    hsv = { h: nuevo.s === 0 ? hsv.h : nuevo.h, s: nuevo.s, v: nuevo.v };
   };
 
-  function pintarPanel(){
-    const { hex, alpha } = leer();
-    const { r,gg,b } = (({r,g,b}) => ({r, gg:g, b}))(fmtHexARgb(hex));
-    const hsv = fmtRgbAHsv(r,gg,b);
-    const hueHex = fmtHsvAHex(hsv.h, 1, 1);
+  // La estructura se arma UNA vez (o cuando cambia el gradiente). Mover el color
+  // solo actualiza estilos y posiciones: si se recreara el HTML, el elemento que se
+  // está arrastrando desaparecería y el puntero saltaría al inicio.
+  function construir(){
     panel.innerHTML = `
-      <div class="fmt-sv" style="background:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,${hueHex});">
-        <div class="fmt-sv-punto" style="left:${hsv.s*100}%;top:${(1-hsv.v)*100}%;"></div>
-      </div>
-      <div class="fmt-bar fmt-hue"><div class="fmt-bar-punto" style="left:${(hsv.h/360)*100}%;"></div></div>
-      <div class="fmt-bar fmt-alpha" style="--c:${hueHex};background-image:linear-gradient(to right, transparent, ${fmtRgba(hex,1)});">
-        <div class="fmt-bar-punto" style="left:${alpha*100}%;"></div>
-      </div>
+      <div class="fmt-sv"><div class="fmt-sv-punto"></div></div>
+      <div class="fmt-bar fmt-hue"><div class="fmt-bar-punto"></div></div>
+      <div class="fmt-bar fmt-alpha"><div class="fmt-alpha-relleno"></div><div class="fmt-bar-punto"></div></div>
       <div class="fmt-picker-row">
-        <input type="text" class="fmt-hex" value="${hex}" spellcheck="false">
-        <span class="muted-note">${Math.round(alpha*100)}%</span>
+        <input type="text" class="fmt-hex" spellcheck="false">
+        <span class="muted-note fmt-alpha-txt"></span>
       </div>
       <label class="fmt-picker-check"><input type="checkbox" class="fmt-grad-on" ${g.activo?'checked':''}> Gradiente</label>
       ${g.activo ? `
@@ -2904,14 +2923,35 @@ function fmtAbrirPicker(swatch, el, prop, onChange){
         <div class="fmt-picker-row">
           <span class="muted-note">Ángulo</span>
           <input type="range" class="fmt-grad-ang" min="0" max="360" step="1" value="${g.angulo==null?90:g.angulo}">
-          <span class="muted-note">${g.angulo==null?90:g.angulo}°</span>
+          <span class="muted-note fmt-ang-txt">${g.angulo==null?90:g.angulo}°</span>
         </div>
-        <div class="fmt-grad-preview" style="background:${fmtPaintCss(el,prop)};"></div>` : ''}
+        <div class="fmt-grad-preview"></div>` : ''}
     `;
-    enganchar(hsv, hex, alpha);
+    enganchar();
+    actualizar();
   }
 
-  function enganchar(hsv, hex, alpha){
+  function actualizar(){
+    const { hex, alpha } = leer();
+    const hueHex = fmtHsvAHex(hsv.h, 1, 1);
+    const sv = panel.querySelector('.fmt-sv');
+    sv.style.background = `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,${hueHex})`;
+    const p = panel.querySelector('.fmt-sv-punto');
+    p.style.left = (hsv.s*100) + '%';
+    p.style.top = ((1-hsv.v)*100) + '%';
+    panel.querySelector('.fmt-hue .fmt-bar-punto').style.left = ((hsv.h/360)*100) + '%';
+    panel.querySelector('.fmt-alpha-relleno').style.background = `linear-gradient(to right, transparent, ${fmtRgba(hex,1)})`;
+    panel.querySelector('.fmt-alpha .fmt-bar-punto').style.left = (alpha*100) + '%';
+    const hx = panel.querySelector('.fmt-hex');
+    if(document.activeElement !== hx) hx.value = hex;
+    panel.querySelector('.fmt-alpha-txt').textContent = Math.round(alpha*100) + '%';
+    const prev = panel.querySelector('.fmt-grad-preview');
+    if(prev) prev.style.background = fmtPaintCss(el, prop);
+  }
+
+  function aplicar(hex, alpha){ guardar(hex, alpha); actualizar(); onChange(); }
+
+  function enganchar(){
     const sv = panel.querySelector('.fmt-sv');
     const hue = panel.querySelector('.fmt-hue');
     const alp = panel.querySelector('.fmt-alpha');
@@ -2926,38 +2966,52 @@ function fmtAbrirPicker(swatch, el, prop, onChange){
       elemento.addEventListener('mousedown', (ev) => {
         ev.preventDefault(); ev.stopPropagation();
         mover(ev);
-        const mm = e2 => mover(e2);
+        const mm = e2 => { e2.preventDefault(); mover(e2); };
         const mu = () => { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); };
         window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu);
       });
     };
-    arrastrar(sv, (px, py) => escribir(fmtHsvAHex(hsv.h, px, 1-py), alpha));
-    arrastrar(hue, (px) => escribir(fmtHsvAHex(px*360, hsv.s || 1, hsv.v || 1), alpha));
-    arrastrar(alp, (px) => escribir(hex, Math.round(px*100)/100));
+    arrastrar(sv, (px, py) => { hsv.s = px; hsv.v = 1-py; aplicar(fmtHsvAHex(hsv.h, hsv.s, hsv.v), leer().alpha); });
+    arrastrar(hue, (px) => { hsv.h = px*360; aplicar(fmtHsvAHex(hsv.h, hsv.s, hsv.v), leer().alpha); });
+    arrastrar(alp, (px) => aplicar(leer().hex, Math.round(px*100)/100));
 
     const hexInput = panel.querySelector('.fmt-hex');
+    hexInput.addEventListener('mousedown', e => e.stopPropagation());
     hexInput.addEventListener('change', () => {
       let v = hexInput.value.trim();
       if(!v.startsWith('#')) v = '#' + v;
-      if(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)) escribir(v, alpha);
-      else hexInput.value = hex;
+      if(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)){ guardar(v, leer().alpha); sincronizarHsvDesdeValor(); actualizar(); onChange(); }
+      else actualizar();
     });
-    hexInput.addEventListener('mousedown', e => e.stopPropagation());
 
     panel.querySelector('.fmt-grad-on').addEventListener('change', (ev) => {
       g.activo = ev.target.checked;
       if(!g.activo) parada = 1;
-      pintarPanel(); onChange();
+      construir(); onChange();
     });
-    panel.querySelectorAll('.fmt-parada').forEach(b => b.addEventListener('click', () => { parada = parseInt(b.dataset.parada); pintarPanel(); }));
+    panel.querySelectorAll('.fmt-parada').forEach(b => b.addEventListener('click', () => {
+      parada = parseInt(b.dataset.parada);
+      panel.querySelectorAll('.fmt-parada').forEach(x => x.classList.toggle('activa', x === b));
+      sincronizarHsvDesdeValor(); actualizar();
+    }));
     const ang = panel.querySelector('.fmt-grad-ang');
-    if(ang) ang.addEventListener('input', () => { g.angulo = parseInt(ang.value); pintarPanel(); onChange(); });
+    if(ang){
+      ang.addEventListener('mousedown', e => e.stopPropagation());
+      ang.addEventListener('input', () => {
+        g.angulo = parseInt(ang.value);
+        panel.querySelector('.fmt-ang-txt').textContent = g.angulo + '°';
+        const prev = panel.querySelector('.fmt-grad-preview');
+        if(prev) prev.style.background = fmtPaintCss(el, prop);
+        onChange();
+      });
+    }
   }
 
   const r = swatch.getBoundingClientRect();
   panel.style.left = Math.min(window.innerWidth - 240, r.left) + 'px';
   panel.style.top = (r.bottom + window.scrollY + 6) + 'px';
-  pintarPanel();
+  sincronizarHsvDesdeValor();
+  construir();
 }
 
 // swatch que abre el selector (reemplaza al input de color nativo)
