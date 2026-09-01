@@ -168,20 +168,61 @@
   .camp-bar .db-io{display:flex;gap:8px;}
   .camp-bar .db-io button{font-size:12px;padding:8px 12px;}
 
-  #dropzone{
+  #dropzone, #actingsDropzone{
     border:1.5px dashed var(--line);border-radius:14px;background:var(--panel);
     padding:30px 24px;text-align:center;cursor:pointer;
     transition:border-color .15s, background .15s;position:relative;overflow:hidden;
   }
-  #dropzone:hover, #dropzone.drag{ border-color:var(--accent); background:var(--panel-2); }
+  #dropzone:hover, #dropzone.drag, #actingsDropzone:hover, #actingsDropzone.drag{ border-color:var(--accent); background:var(--panel-2); }
   #dropzone.disabled{opacity:.45;cursor:not-allowed;}
-  #dropzone input{display:none;}
-  #dropzone .icon{
+  #dropzone input, #actingsDropzone input{display:none;}
+  #dropzone .icon, #actingsDropzone .icon{
     font-family:var(--mono);font-size:12px;color:var(--accent);
     letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;
   }
-  #dropzone .cta{font-size:15px;font-weight:600;}
-  #dropzone .hint{color:var(--muted);font-size:13px;margin-top:6px;}
+  #dropzone .cta, #actingsDropzone .cta{font-size:15px;font-weight:600;}
+  #dropzone .hint, #actingsDropzone .hint{color:var(--muted);font-size:13px;margin-top:6px;}
+
+  /* ---- actings: revisión de subida y grilla de semáforos ---- */
+  .act-review-row{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--line);border-radius:9px;
+    padding:10px 14px;margin-bottom:6px;font-size:12.5px;
+  }
+  .act-review-row .fname{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:200px;word-break:break-all;}
+  .act-review-row select{
+    font-family:var(--sans);font-size:12.5px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--text);border-radius:7px;padding:6px 8px;
+  }
+  .act-review-row.unmatched{border-color:#ff6b6b;}
+  .act-review-row .warn-tag{color:#ff6b6b;font-size:11px;font-family:var(--mono);}
+
+  .led{
+    width:13px;height:13px;border-radius:50%;display:inline-block;flex-shrink:0;
+    cursor:pointer;border:1px solid rgba(255,255,255,.15);
+  }
+  .led[data-estado="faltante"]{background:#4a2020;}
+  .led[data-estado="bruta"]{background:#ff8a3d;box-shadow:0 0 6px rgba(255,138,61,.5);}
+  .led[data-estado="recortada"]{background:#ffd23d;box-shadow:0 0 6px rgba(255,210,61,.5);}
+  .led[data-estado="procesada"]{background:#23c88b;box-shadow:0 0 6px rgba(35,200,139,.5);}
+
+  .act-jugador-row{
+    display:grid;grid-template-columns:34px 210px 190px 130px 130px 1fr;align-items:center;gap:14px;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;margin-bottom:8px;
+  }
+  .act-jugador-row .admin-name, .act-jugador-row .muted-note{
+    min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .act-grid-header{
+    display:grid;grid-template-columns:34px 210px 190px 130px 130px 1fr;gap:14px;
+    padding:0 14px 8px;
+  }
+  .act-grid-header .act-col-title{
+    font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  }
+  .act-kit-group{display:flex;align-items:center;}
+  .act-kit-group .leds{display:flex;gap:6px;}
 
   .filelist{margin-top:14px;display:flex;flex-direction:column;gap:6px;}
   .filerow{
@@ -474,7 +515,8 @@
       <button class="side-link" data-sec="bd"><span class="ic"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 18V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M20 12L20 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 10C16.4183 10 20 8.20914 20 6C20 3.79086 16.4183 2 12 2C7.58172 2 4 3.79086 4 6C4 8.20914 7.58172 10 12 10Z" stroke="currentColor" stroke-width="1.5"/><path d="M20 12C20 14.2091 16.4183 16 12 16C7.58172 16 4 14.2091 4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M20 18C20 20.2091 16.4183 22 12 22C7.58172 22 4 20.2091 4 18" stroke="currentColor" stroke-width="1.5"/></svg></span>Base de Datos</button>
       <button class="side-link" data-sec="libero"><span class="ic"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.02542 9.21017C5.56228 7.86802 5.8307 7.19695 6.29238 6.67048C6.41002 6.53633 6.53633 6.41002 6.67048 6.29238C7.19695 5.8307 7.86802 5.56228 9.21017 5.02542C15.5025 2.50848 18.6487 1.25001 20.4457 2.47117C20.8718 2.7607 21.2393 3.1282 21.5288 3.55428C22.4801 4.95418 21.9267 7.17279 20.4457 11.0596C20.0256 12.1623 19.5308 13.3992 18.9746 14.7898C18.4377 16.132 18.1693 16.8031 17.7076 17.3295C17.59 17.4637 17.4637 17.59 17.3295 17.7076C16.8031 18.1693 16.132 18.4377 14.7898 18.9746C8.49749 21.4915 5.35132 22.75 3.55428 21.5288C3.1282 21.2393 2.76071 20.8718 2.47117 20.4457C1.52476 19.053 2.06771 16.8499 3.53158 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12.5 14.9585C12.3374 14.9858 12.1704 15 12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12C15 12.1704 14.9858 12.3374 14.9585 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Líbero</button>
       <button class="side-link" data-sec="admin"><span class="ic"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M3.66122 10.6392C4.13377 10.9361 4.43782 11.4419 4.43782 11.9999C4.43781 12.558 4.13376 13.0638 3.66122 13.3607C3.33966 13.5627 3.13248 13.7242 2.98508 13.9163C2.66217 14.3372 2.51966 14.869 2.5889 15.3949C2.64082 15.7893 2.87379 16.1928 3.33973 16.9999C3.80568 17.8069 4.03865 18.2104 4.35426 18.4526C4.77508 18.7755 5.30694 18.918 5.83284 18.8488C6.07287 18.8172 6.31628 18.7185 6.65196 18.5411C7.14544 18.2803 7.73558 18.2699 8.21895 18.549C8.70227 18.8281 8.98827 19.3443 9.00912 19.902C9.02332 20.2815 9.05958 20.5417 9.15224 20.7654C9.35523 21.2554 9.74458 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8478 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.9021C15.0117 19.3443 15.2977 18.8281 15.7811 18.549C16.2644 18.27 16.8545 18.2804 17.3479 18.5412C17.6837 18.7186 17.9271 18.8173 18.1671 18.8489C18.693 18.9182 19.2249 18.7756 19.6457 18.4527C19.9613 18.2106 20.1943 17.807 20.6603 17C20.8677 16.6407 21.029 16.3614 21.1486 16.1272M20.3387 13.3608C19.8662 13.0639 19.5622 12.5581 19.5621 12.0001C19.5621 11.442 19.8662 10.9361 20.3387 10.6392C20.6603 10.4372 20.8674 10.2757 21.0148 10.0836C21.3377 9.66278 21.4802 9.13092 21.411 8.60502C21.3591 8.2106 21.1261 7.80708 20.6601 7.00005C20.1942 6.19301 19.9612 5.7895 19.6456 5.54732C19.2248 5.22441 18.6929 5.0819 18.167 5.15113C17.927 5.18274 17.6836 5.2814 17.3479 5.45883C16.8544 5.71964 16.2643 5.73004 15.781 5.45096C15.2977 5.1719 15.0117 4.6557 14.9909 4.09803C14.9767 3.71852 14.9404 3.45835 14.8478 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74458 2.35523 9.35523 2.74458 9.15224 3.23463C9.05958 3.45833 9.02332 3.71848 9.00912 4.09794C8.98826 4.65566 8.70225 5.17191 8.21891 5.45096C7.73557 5.73002 7.14548 5.71959 6.65205 5.4588C6.31633 5.28136 6.0729 5.18269 5.83285 5.15108C5.30695 5.08185 4.77509 5.22436 4.35427 5.54727C4.03866 5.78945 3.80569 6.19297 3.33974 7C3.13231 7.35929 2.97105 7.63859 2.85138 7.87273" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Administración</button>
-      <button class="side-link" data-sec="actings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Actings <span class="tag-soon">pronto</span></button>
+      <button class="side-link" data-sec="actings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>Actings</button>
+      <button class="side-link" data-sec="flowics"><span class="ic"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7C3 5.11438 3 4.17157 3.58579 3.58579C4.17157 3 5.11438 3 7 3H17C18.8856 3 19.8284 3 20.4142 3.58579C21 4.17157 21 5.11438 21 7V17C21 18.8856 21 19.8284 20.4142 20.4142C19.8284 21 18.8856 21 17 21H7C5.11438 21 4.17157 21 3.58579 20.4142C3 19.8284 3 18.8856 3 17V7Z" stroke="currentColor" stroke-width="1.5"/><path d="M3 9H21" stroke="currentColor" stroke-width="1.5"/><path d="M9 21V9" stroke="currentColor" stroke-width="1.5"/></svg></span>Flowics</button>
     </nav>
     <div class="side-camp">
       <label class="side-camp-label">Campeonato activo</label>
@@ -656,14 +698,146 @@
     </div>
   </section>
 
-  <section id="section-actings" class="placeholder-panel" style="display:none;">
-    <h3>Actings</h3>
-    <p>Acá vas a poder cargar y controlar las fotos de actings, cruzadas con los jugadores de cada plantel de la base de datos. Todavía no está construido — lo vemos más adelante.</p>
+  <section id="section-actings" style="display:none;">
+    <p class="sec-desc">Fotos de acting por jugador — 5 tipos × local/visita. Arrastrá varias a la vez y el sistema intenta reconocer jugador, tipo y kit por el nombre del archivo.</p>
+
+    <div class="admin-menu" id="actingsMenu">
+      <div class="admin-card" data-actsub="upload"><h4>Subir fotos</h4><p>Arrastre masivo con reconocimiento automático</p></div>
+      <div class="admin-card" data-actsub="grid"><h4>Estado por jugador</h4><p>Grilla de semáforos — 10 casilleros por jugador</p></div>
+      <div class="admin-card" data-actsub="export"><h4>Exportar Excel para Flowics</h4><p>Jugador, equipo y URL de cada foto</p></div>
+    </div>
+
+    <div id="actingsSubPanel" style="display:none;">
+      <button class="ghost admin-back" id="actingsBackBtn">← Volver a Actings</button>
+
+      <div id="actingsView-upload" class="admin-subview" style="display:none;">
+        <div class="camp-bar" style="margin-bottom:16px;">
+          <label>Estas fotos están en etapa:
+            <select id="actingsBatchEstado">
+              <option value="bruta">Bruta</option>
+              <option value="recortada">Recortada</option>
+              <option value="procesada">Procesada</option>
+            </select>
+          </label>
+        </div>
+        <div id="actingsDropzone">
+          <div class="icon">FOTOS · ACTING</div>
+          <div class="cta">Arrastra las fotos acá o hacé clic para seleccionarlas</div>
+          <div class="hint">Podés soltar todas las de una tanda (media day) juntas — se intenta reconocer cada una por su nombre de archivo.</div>
+          <input type="file" id="actingsFileInput" accept="image/*" multiple>
+        </div>
+        <div id="actingsReview" style="display:none;margin-top:20px;">
+          <div class="inicio-block-head">
+            <h3 style="font-size:14px;">Revisar antes de subir</h3>
+            <span class="muted-note">corregí lo que no haya calzado bien</span>
+          </div>
+          <div id="actingsReviewList"></div>
+          <div class="controls" style="margin-top:16px;">
+            <button class="primary" id="actingsConfirmBtn">Subir todo</button>
+            <button class="ghost" id="actingsCancelBtn">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="actingsView-grid" class="admin-subview" style="display:none;">
+        <div class="camp-bar" style="margin-bottom:14px;">
+          <input type="text" class="admin-search" id="actingsSearchInput" placeholder="Buscar jugador o club…" style="margin:0;">
+          <label>Ordenar por:
+            <select id="actingsSortSelect">
+              <option value="nombre">Alfabético</option>
+              <option value="club">Equipo</option>
+              <option value="estado">Estado (más faltantes primero)</option>
+            </select>
+          </label>
+        </div>
+        <div class="act-grid-header">
+          <span></span><span></span><span></span>
+          <span class="act-col-title">Local</span>
+          <span class="act-col-title">Visita</span>
+        </div>
+        <div id="actingsGridList"></div>
+        <div class="empty" id="actingsGridEmpty" style="display:none;">No se encontraron jugadores.</div>
+      </div>
+      <div id="actingsView-export" class="admin-subview" style="display:none;">
+        <h3>Exportar Excel para Flowics</h3>
+        <p class="sec-desc">Una fila por foto: jugador, equipo y su URL pública, lista para usar como fuente externa en Flowics.</p>
+        <div class="camp-bar" style="margin-bottom:14px;">
+          <label>Campeonato:
+            <select id="actingsExportCamp"><option value="">— todos —</option></select>
+          </label>
+          <label>Incluir:
+            <select id="actingsExportEstado">
+              <option value="procesada">Solo procesadas</option>
+              <option value="todas">Todas (con su estado)</option>
+            </select>
+          </label>
+        </div>
+        <div class="inicio-block-head">
+          <h3 style="font-size:14px;">Columnas</h3>
+          <span class="muted-note">arrastrá los encabezados para reordenar, ✕ para ocultar</span>
+        </div>
+        <div class="tablewrap">
+          <table class="grid" id="actingsExportTable"></table>
+        </div>
+        <div class="controls" style="margin-top:16px;">
+          <button class="primary" id="actingsExportBtn">Descargar Excel</button>
+          <button class="ghost" id="actingsExportCsvBtn">Descargar CSV</button>
+          <span class="muted-note" id="actingsExportCount"></span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="section-flowics" style="display:none;">
+    <p class="sec-desc">Controles de Flowics — cada tarjeta es un control que creás vos. Se agregan según lo que necesites.</p>
+
+    <div id="flowicsMenuView">
+      <div class="camp-bar" style="margin-bottom:16px;">
+        <input type="text" id="flowicsNewNombre" placeholder="nombre del control nuevo…">
+        <label>Tipo:
+          <select id="flowicsNewTipo">
+            <option value="formacion">Formación drag-and-drop</option>
+            <option value="tabla">Tabla</option>
+          </select>
+        </label>
+        <button id="flowicsNewBtn">+ Crear control</button>
+      </div>
+      <div class="admin-menu" id="flowicsCardsList"></div>
+      <div class="empty" id="flowicsCardsEmpty" style="display:none;">Todavía no hay controles — creá uno arriba.</div>
+    </div>
+
+    <div id="flowicsDetailView" style="display:none;">
+      <button class="ghost admin-back" id="flowicsBackBtn">← Volver a Flowics</button>
+      <div class="team-head" style="margin-bottom:18px;">
+        <div class="team-head-name"><h3 id="flowicsDetailNombre"></h3></div>
+        <div class="admin-actions">
+          <span class="muted-note" id="flowicsDetailTipo"></span>
+          <button class="ghost danger" id="flowicsDeleteBtn">Eliminar control</button>
+        </div>
+      </div>
+
+      <div id="flowicsTipo-formacion" style="display:none;">
+        <div class="placeholder-panel">
+          <h3>Formación drag-and-drop</h3>
+          <p>Este tipo de control todavía no está construido — lo armamos cuando quieras. La idea es acomodar los jugadores en la cancha acá y usar esta página como contenido externo en Flowics.</p>
+        </div>
+      </div>
+
+      <div id="flowicsTipo-tabla" style="display:none;">
+        <div class="placeholder-panel">
+          <h3>Tabla</h3>
+          <p>Este tipo de control todavía no está construido — lo armamos cuando quieras.</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <footer class="note">
     Los datos ahora viven en una base compartida (Supabase) — cualquier carga, corrección o borrado se refleja al instante en las pantallas de todos los conectados en el área. Solo entra quien fue invitado por correo. La detección de columnas del dossier se basa en la posición de los encabezados de la tabla de plantel (N°, NOMBRE, NACIONALIDAD, POS, PJ, T, MIN., GOLES, ASIST, TA, TR, EDAD, NACIMIENTO, EST).
   </footer>
+
+  <datalist id="actingsJugadoresDatalist"></datalist>
 
   </div>
 </div>
@@ -783,6 +957,25 @@ function normalizeName(name){
   return String(name||'').trim().replace(/\s+/g,' ').toUpperCase()
     .replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E').replace(/[ÍÌÏÎ]/g,'I')
     .replace(/[ÓÒÖÔ]/g,'O').replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N');
+}
+// ¿el texto empieza, palabra por palabra, con lo que se busca? admite buscar por una
+// palabra suelta en cualquier posición ("chile") o una frase completa ("universidad de ch"),
+// donde solo la última palabra escrita puede quedar a medio tipear. Se usa en todos los
+// buscadores (jugadores, actings) para no duplicar la lógica.
+function empiezaConFrase(texto, query){
+  const words = normalizeName(texto).split(' ').filter(Boolean);
+  const qWords = query.split(' ').filter(Boolean);
+  if(qWords.length === 0) return false;
+  for(let start = 0; start <= words.length - qWords.length; start++){
+    let ok = true;
+    for(let i = 0; i < qWords.length; i++){
+      const esUltima = i === qWords.length - 1;
+      const w = words[start + i];
+      if(esUltima ? !w.startsWith(qWords[i]) : w !== qWords[i]){ ok = false; break; }
+    }
+    if(ok) return true;
+  }
+  return false;
 }
 
 async function ensureCampeonatoByName(name){
@@ -945,7 +1138,12 @@ function scheduleRefresh(){
       await loadClubes();
       if(adminSubView === 'campeonatos') renderAdminCampList();
       if(adminSubView === 'clubes'){ renderAdminClubes(); if(clubDetailId) renderClubDetail(); }
-      if(adminSubView === 'jugadores'){ await loadJugadoresMaestro(); renderAdminJugadorDir(); renderAdminReview(); }
+      if(adminSubView === 'jugadores'){ await loadJugadoresMaestro(); await loadMediosCuerpo(); renderAdminJugadorDir(); renderAdminReview(); }
+    }
+    if(activeSection === 'actings' && actingsSubView === 'grid'){ await loadMediosCuerpo(); renderActingsGrid(); }
+    if(activeSection === 'flowics'){
+      await loadFlowicsControles();
+      if(flowicsDetailId) await renderFlowicsDetail(); else renderFlowicsCards();
     }
   }, 400);
 }
@@ -956,6 +1154,8 @@ function startRealtime(){
     .on('postgres_changes', { event: '*', schema: 'public', table: 'plantel_jugadores' }, scheduleRefresh)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'clubes' }, scheduleRefresh)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'jugadores_maestro' }, scheduleRefresh)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'jugador_fotos' }, scheduleRefresh)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'flowics_controles' }, scheduleRefresh)
     .subscribe();
 }
 
@@ -1085,7 +1285,7 @@ document.getElementById('dbImportInput').addEventListener('change', async (e) =>
     const camps = imported.campeonatos;
     if(!camps) throw new Error('formato inválido');
     const campArray = Array.isArray(camps) ? camps : Object.entries(camps).map(([nombre, v]) => ({ nombre, equipos: Object.entries(v.equipos||{}).map(([n2,eq]) => ({nombre:n2, plantel_jugadores: eq.jugadores})) }));
-    const { data: maestroData } = await sb.from('jugadores_maestro').select('*');
+    const { data: maestroData } = await sb.from('jugadores_maestro').select('*').limit(50000);
     const maestroCache = maestroData || [];
     for(const c of campArray){
       const campId = await ensureCampeonatoByName(c.nombre);
@@ -1139,8 +1339,10 @@ async function processPdf(file){
   const buf = await file.arrayBuffer();
   const doc = await pdfjsLib.getDocument({data: buf}).promise;
   let teamsFound = 0;
-  // caché compartido de jugadores maestro para todo el PDF, para no re-consultar por cada equipo
-  const { data: maestroData } = await sb.from('jugadores_maestro').select('*');
+  // caché compartido de jugadores maestro para todo el PDF, para no re-consultar por cada equipo.
+  // OJO: el límite explícito es obligatorio — sin él Supabase corta en 1000 filas y el caché
+  // queda incompleto, lo que hace que se creen jugadores maestro duplicados.
+  const { data: maestroData } = await sb.from('jugadores_maestro').select('*').limit(50000);
   const maestroCache = maestroData || [];
   for(let p = 1; p <= doc.numPages; p++){
     const page = await doc.getPage(p);
@@ -1170,8 +1372,17 @@ function switchSection(sec){
   document.getElementById('section-libero').style.display = sec === 'libero' ? 'block' : 'none';
   document.getElementById('section-admin').style.display = sec === 'admin' ? 'block' : 'none';
   document.getElementById('section-actings').style.display = sec === 'actings' ? 'block' : 'none';
+  document.getElementById('section-flowics').style.display = sec === 'flowics' ? 'block' : 'none';
   if(sec === 'inicio') renderInicio();
   if(sec === 'admin') showAdminMenu();
+  if(sec === 'actings') showActingsMenu();
+  if(sec === 'flowics'){
+    (async () => {
+      if(!allClubes.length) await loadClubes();
+      await loadFlowicsControles();
+      showFlowicsMenu();
+    })();
+  }
 }
 document.getElementById('sectionNav').addEventListener('click', (e) => {
   const btn = e.target.closest('.side-link');
@@ -1509,7 +1720,7 @@ function csvCell(v, delim){
 let allClubes = [];
 
 async function loadClubes(){
-  const { data, error } = await sb.from('clubes').select('id,nombre,abreviatura,escudo_url').order('nombre');
+  const { data, error } = await sb.from('clubes').select('id,nombre,abreviatura,escudo_url').order('nombre').limit(5000);
   if(error){ console.error(error); return; }
   allClubes = data || [];
 }
@@ -1782,6 +1993,29 @@ async function renderAdminReview(){
 
 // ---- Directorio de jugadores (identidad editable acá — nombre, nacionalidad, nacimiento, estatura) ----
 let allJugadoresMaestro = [];
+// Fotos de medio cuerpo por jugador, para mostrar como miniatura en los listados.
+// Prioriza la de local; si no hay, usa la de visita.
+let mediosCuerpoPorJugador = {};
+async function loadMediosCuerpo(){
+  const { data, error } = await sb.from('jugador_fotos')
+    .select('jugador_id,kit,url')
+    .eq('tipo','MEDIO_CUERPO')
+    .limit(50000);
+  if(error){ console.error(error); return; }
+  const map = {};
+  (data || []).forEach(f => {
+    if(!f.url) return;
+    if(f.kit === 'LOCAL' || !map[f.jugador_id]) map[f.jugador_id] = f.url;
+  });
+  mediosCuerpoPorJugador = map;
+}
+function avatarHtml(jugador, cls, phCls){
+  const url = mediosCuerpoPorJugador[jugador.id];
+  return url
+    ? `<img class="${cls}" src="${escapeHtml(url)}" alt="">`
+    : `<span class="${phCls}">${initials(jugador.nombre_tv)}</span>`;
+}
+
 async function loadJugadoresMaestro(){
   const { data, error } = await sb.from('jugadores_maestro').select('id,nombre_tv,nombre_id,nacionalidad,nacimiento,est,club_id').order('nombre_tv').limit(5000);
   if(error){ console.error(error); return; }
@@ -1793,25 +2027,6 @@ function renderAdminJugadorDir(){
   const q = normalizeName(document.getElementById('searchJugadorInput').value || '');
   const clubById = {};
   allClubes.forEach(c => clubById[c.id] = c);
-
-  // ¿el texto empieza, palabra por palabra, con lo que se busca? admite buscar por una
-  // palabra suelta en cualquier posición ("chile") o una frase completa ("universidad de ch"),
-  // donde solo la última palabra escrita puede quedar a medio tipear.
-  function empiezaConFrase(texto, query){
-    const words = normalizeName(texto).split(' ').filter(Boolean);
-    const qWords = query.split(' ').filter(Boolean);
-    if(qWords.length === 0) return false;
-    for(let start = 0; start <= words.length - qWords.length; start++){
-      let ok = true;
-      for(let i = 0; i < qWords.length; i++){
-        const esUltima = i === qWords.length - 1;
-        const w = words[start + i];
-        if(esUltima ? !w.startsWith(qWords[i]) : w !== qWords[i]){ ok = false; break; }
-      }
-      if(ok) return true;
-    }
-    return false;
-  }
 
   const filtrados = q ? allJugadoresMaestro.filter(j => {
     if(empiezaConFrase(j.nombre_tv, q)) return true;
@@ -1830,7 +2045,7 @@ function renderAdminJugadorDir(){
     row.className = 'admin-row';
     row.style.flexWrap = 'wrap';
     row.innerHTML = `
-      <span class="crest-ph">${initials(j.nombre_tv)}</span>
+      ${avatarHtml(j, 'crest', 'crest-ph')}
       <span class="admin-name" contenteditable="true" data-field="nombre_tv" style="min-width:170px;">${escapeHtml(j.nombre_tv)}</span>
       <span class="muted-note" contenteditable="true" data-field="nacionalidad" style="min-width:100px;">${escapeHtml(j.nacionalidad||'')}</span>
       <span class="muted-note" contenteditable="true" data-field="nacimiento" style="min-width:100px;">${escapeHtml(j.nacimiento||'')}</span>
@@ -1870,7 +2085,7 @@ async function showAdminSub(sub){
   document.getElementById('adminView-' + sub).style.display = 'block';
   if(sub === 'campeonatos') renderAdminCampList();
   if(sub === 'clubes'){ await loadClubes(); closeClubDetail(); }
-  if(sub === 'jugadores'){ await loadClubes(); await loadJugadoresMaestro(); renderAdminJugadorDir(); renderAdminReview(); }
+  if(sub === 'jugadores'){ await loadClubes(); await loadJugadoresMaestro(); await loadMediosCuerpo(); renderAdminJugadorDir(); renderAdminReview(); }
 }
 function showAdminMenu(){
   adminSubView = 'menu';
@@ -1883,6 +2098,496 @@ document.getElementById('adminMenu').addEventListener('click', (e) => {
   showAdminSub(card.dataset.sub);
 });
 document.getElementById('adminBackBtn').addEventListener('click', showAdminMenu);
+
+// ================== APARTADO: ACTINGS ==================
+const TIPOS_ACTING = ['FRONTAL','LATERAL_IZQ','LATERAL_DER','MEDIO_CUERPO','BUSTO'];
+const TIPO_LABELS = { FRONTAL:'Frontal', LATERAL_IZQ:'Lateral izq.', LATERAL_DER:'Lateral der.', MEDIO_CUERPO:'Medio cuerpo', BUSTO:'Busto' };
+const KIT_LABELS = { LOCAL:'Local', VISITA:'Visita' };
+let actingsSubView = 'menu';
+let actingsReviewRows = [];
+
+function actingsGetTokens(filename){
+  const base = filename.replace(/\.[a-zA-Z0-9]+$/, '');
+  return normalizeName(base).split(/[^A-ZÁÉÍÓÚÑ0-9]+/).filter(Boolean);
+}
+
+function parseActingFilename(filename){
+  const tokens = actingsGetTokens(filename);
+  const consumed = new Set();
+  let kit = null, tipo = null;
+  const has = w => tokens.includes(w);
+
+  tokens.forEach((t,i) => { if(t === 'LOCAL'){ kit = 'LOCAL'; consumed.add(i); } if(t === 'VISITA'){ kit = 'VISITA'; consumed.add(i); } });
+
+  if(has('LATERAL') && (has('IZQ') || has('IZQUIERDA'))) tipo = 'LATERAL_IZQ';
+  else if(has('LATERAL') && (has('DER') || has('DERECHA'))) tipo = 'LATERAL_DER';
+  else if(has('FRONTAL')) tipo = 'FRONTAL';
+  else if(has('BUSTO')) tipo = 'BUSTO';
+  else if(has('MEDIO')) tipo = 'MEDIO_CUERPO';
+
+  const TIPO_KEYWORDS = ['FRONTAL','LATERAL','IZQUIERDA','IZQ','DERECHA','DER','MEDIO','CUERPO','COMPLETO','BUSTO','FOTO'];
+  tokens.forEach((t,i) => {
+    if(TIPO_KEYWORDS.includes(t)) consumed.add(i);
+    if(/^\d{4}$/.test(t)) consumed.add(i); // año
+  });
+  allClubes.forEach(c => {
+    if(!c.abreviatura) return;
+    const abrevNorm = normalizeName(c.abreviatura);
+    tokens.forEach((t,i) => { if(t === abrevNorm) consumed.add(i); });
+  });
+
+  const residual = tokens.filter((t,i) => !consumed.has(i));
+  return { tipo, kit, residualTokens: residual };
+}
+
+function matchJugadorPorTokens(residualTokens){
+  if(residualTokens.length === 0) return [];
+  const target = [...residualTokens].sort().join(' ');
+  return allJugadoresMaestro.filter(j => {
+    const jTokens = j.nombre_id.split(' ').filter(Boolean).sort().join(' ');
+    return jTokens === target;
+  });
+}
+
+function populateJugadoresDatalist(){
+  const dl = document.getElementById('actingsJugadoresDatalist');
+  dl.innerHTML = allJugadoresMaestro.map(j => `<option value="${escapeHtml(j.nombre_tv)}">`).join('');
+}
+function resolveJugadorPorTexto(texto){
+  const norm = normalizeName(texto);
+  return allJugadoresMaestro.find(j => normalizeName(j.nombre_tv) === norm || j.nombre_id === norm) || null;
+}
+
+// ---- router de Actings ----
+function showActingsMenu(){
+  actingsSubView = 'menu';
+  document.getElementById('actingsMenu').style.display = 'grid';
+  document.getElementById('actingsSubPanel').style.display = 'none';
+}
+async function showActingsSub(sub){
+  actingsSubView = sub;
+  document.getElementById('actingsMenu').style.display = 'none';
+  document.getElementById('actingsSubPanel').style.display = 'block';
+  document.querySelectorAll('#section-actings .admin-subview').forEach(v => v.style.display = 'none');
+  document.getElementById('actingsView-' + sub).style.display = 'block';
+  if(!allClubes.length) await loadClubes();
+  await loadJugadoresMaestro();
+  await loadMediosCuerpo();
+  populateJugadoresDatalist();
+  if(sub === 'upload'){
+    actingsReviewRows = [];
+    document.getElementById('actingsReview').style.display = 'none';
+  }
+  if(sub === 'grid') renderActingsGrid();
+  if(sub === 'export'){
+    const campSel = document.getElementById('actingsExportCamp');
+    campSel.innerHTML = '<option value="">— todos —</option>' +
+      campeonatosList.map(c => `<option value="${c.id}">${escapeHtml(c.nombre)}</option>`).join('');
+    await refreshActingsExport();
+  }
+}
+document.getElementById('actingsMenu').addEventListener('click', (e) => {
+  const card = e.target.closest('.admin-card');
+  if(!card) return;
+  showActingsSub(card.dataset.actsub);
+});
+document.getElementById('actingsBackBtn').addEventListener('click', showActingsMenu);
+
+// ---- subida masiva con reconocimiento por nombre de archivo ----
+const actingsDropzone = document.getElementById('actingsDropzone');
+const actingsFileInput = document.getElementById('actingsFileInput');
+actingsDropzone.addEventListener('click', () => actingsFileInput.click());
+actingsDropzone.addEventListener('dragover', e => { e.preventDefault(); actingsDropzone.classList.add('drag'); });
+actingsDropzone.addEventListener('dragleave', () => actingsDropzone.classList.remove('drag'));
+actingsDropzone.addEventListener('drop', e => {
+  e.preventDefault(); actingsDropzone.classList.remove('drag');
+  handleActingsFiles(e.dataTransfer.files);
+});
+actingsFileInput.addEventListener('change', e => handleActingsFiles(e.target.files));
+
+function handleActingsFiles(fileList){
+  const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  actingsReviewRows = files.map(file => {
+    const { tipo, kit, residualTokens } = parseActingFilename(file.name);
+    const candidatos = matchJugadorPorTokens(residualTokens);
+    const jugador = candidatos.length === 1 ? candidatos[0] : null;
+    return { file, tipo, kit, jugadorId: jugador ? jugador.id : null, jugadorNombre: jugador ? jugador.nombre_tv : '' };
+  });
+  document.getElementById('actingsReview').style.display = 'block';
+  renderActingsReview();
+}
+
+function renderActingsReview(){
+  const box = document.getElementById('actingsReviewList');
+  box.innerHTML = '';
+  actingsReviewRows.forEach((row, idx) => {
+    const incompleta = !row.jugadorId || !row.tipo || !row.kit;
+    const el = document.createElement('div');
+    el.className = 'act-review-row' + (incompleta ? ' unmatched' : '');
+    el.innerHTML = `
+      <span class="fname">${escapeHtml(row.file.name)}</span>
+      <input type="text" list="actingsJugadoresDatalist" placeholder="Buscar jugador…" value="${escapeHtml(row.jugadorNombre)}" data-field="jugador" style="min-width:190px;">
+      <select data-field="tipo">
+        <option value="">— tipo —</option>
+        ${TIPOS_ACTING.map(t => `<option value="${t}" ${row.tipo===t?'selected':''}>${TIPO_LABELS[t]}</option>`).join('')}
+      </select>
+      <select data-field="kit">
+        <option value="">— kit —</option>
+        <option value="LOCAL" ${row.kit==='LOCAL'?'selected':''}>Local</option>
+        <option value="VISITA" ${row.kit==='VISITA'?'selected':''}>Visita</option>
+      </select>
+      ${incompleta ? '<span class="warn-tag">revisar</span>' : ''}
+    `;
+    el.querySelector('[data-field="jugador"]').addEventListener('input', (e) => {
+      const j = resolveJugadorPorTexto(e.target.value);
+      row.jugadorId = j ? j.id : null;
+      row.jugadorNombre = e.target.value;
+      renderActingsReview();
+    });
+    el.querySelector('[data-field="tipo"]').addEventListener('change', (e) => { row.tipo = e.target.value || null; renderActingsReview(); });
+    el.querySelector('[data-field="kit"]').addEventListener('change', (e) => { row.kit = e.target.value || null; renderActingsReview(); });
+    box.appendChild(el);
+  });
+}
+document.getElementById('actingsCancelBtn').addEventListener('click', () => {
+  actingsReviewRows = [];
+  document.getElementById('actingsReview').style.display = 'none';
+  actingsFileInput.value = '';
+});
+document.getElementById('actingsConfirmBtn').addEventListener('click', async () => {
+  const incompletas = actingsReviewRows.filter(r => !r.jugadorId || !r.tipo || !r.kit);
+  if(incompletas.length > 0){ alert(`Faltan datos en ${incompletas.length} foto(s) — completá jugador, tipo y kit en todas antes de subir.`); return; }
+  const estado = document.getElementById('actingsBatchEstado').value;
+  const btn = document.getElementById('actingsConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Subiendo…';
+  let ok = 0, fail = 0;
+  for(const row of actingsReviewRows){
+    const ext = (row.file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${row.jugadorId}_${row.tipo}_${row.kit}.${ext}`;
+    const { error: upErr } = await sb.storage.from('actings').upload(path, row.file, { upsert: true, contentType: row.file.type });
+    if(upErr){ fail++; continue; }
+    const { data: pub } = sb.storage.from('actings').getPublicUrl(path);
+    const url = pub.publicUrl + '?t=' + Date.now();
+    const { error: dbErr } = await sb.from('jugador_fotos').upsert(
+      { jugador_id: row.jugadorId, tipo: row.tipo, kit: row.kit, estado, url, archivo_nombre: row.file.name, updated_at: new Date().toISOString() },
+      { onConflict: 'jugador_id,tipo,kit' }
+    );
+    if(dbErr) fail++; else ok++;
+  }
+  btn.disabled = false; btn.textContent = 'Subir todo';
+  alert(`Listo: ${ok} foto(s) subidas${fail ? `, ${fail} con error` : ''}.`);
+  actingsReviewRows = [];
+  document.getElementById('actingsReview').style.display = 'none';
+  actingsFileInput.value = '';
+});
+
+// ---- grilla de semáforos por jugador ----
+// Contador para descartar renders viejos: como esta función espera datos de la base,
+// si se dispara varias veces seguidas (escribiendo en el buscador) las respuestas pueden
+// volver desordenadas y duplicar filas. Solo el render más reciente pinta la lista.
+let actingsGridRenderId = 0;
+async function renderActingsGrid(){
+  const miRenderId = ++actingsGridRenderId;
+  const q = normalizeName(document.getElementById('actingsSearchInput').value || '');
+  const orden = document.getElementById('actingsSortSelect').value;
+  const clubById = {};
+  allClubes.forEach(c => clubById[c.id] = c);
+  const filtrados = q ? allJugadoresMaestro.filter(j => {
+    if(empiezaConFrase(j.nombre_tv, q)) return true;
+    const club = j.club_id ? clubById[j.club_id] : null;
+    if(club && empiezaConFrase(club.nombre, q)) return true;
+    return false;
+  }).slice(0, 150) : allJugadoresMaestro.slice(0, 60);
+
+  const list = document.getElementById('actingsGridList');
+  const empty = document.getElementById('actingsGridEmpty');
+  empty.style.display = filtrados.length === 0 ? 'block' : 'none';
+  if(filtrados.length === 0){ list.innerHTML = ''; return; }
+
+  const { data: fotos } = await sb.from('jugador_fotos').select('jugador_id,tipo,kit,estado,url').in('jugador_id', filtrados.map(j => j.id));
+  if(miRenderId !== actingsGridRenderId) return; // llegó tarde: ya hay un render más nuevo
+  const fotoMap = {};
+  (fotos || []).forEach(f => { fotoMap[f.jugador_id + '_' + f.tipo + '_' + f.kit] = f; });
+
+  // cuenta cuántos de los 10 casilleros NO están procesados todavía (para ordenar por estado)
+  function faltantesDe(jugadorId){
+    let n = 0;
+    ['LOCAL','VISITA'].forEach(kit => TIPOS_ACTING.forEach(t => {
+      const f = fotoMap[jugadorId + '_' + t + '_' + kit];
+      if(!f || f.estado !== 'procesada') n++;
+    }));
+    return n;
+  }
+
+  const ordenados = [...filtrados];
+  if(orden === 'club'){
+    ordenados.sort((a,b) => {
+      const ca = a.club_id ? (clubById[a.club_id]||{}).nombre || '' : '';
+      const cb = b.club_id ? (clubById[b.club_id]||{}).nombre || '' : '';
+      return ca.localeCompare(cb) || a.nombre_tv.localeCompare(b.nombre_tv);
+    });
+  } else if(orden === 'estado'){
+    ordenados.sort((a,b) => faltantesDe(b.id) - faltantesDe(a.id) || a.nombre_tv.localeCompare(b.nombre_tv));
+  } else {
+    ordenados.sort((a,b) => a.nombre_tv.localeCompare(b.nombre_tv));
+  }
+
+  list.innerHTML = ''; // se limpia recién acá, con los datos ya en mano
+  ordenados.forEach(j => {
+    const club = j.club_id ? clubById[j.club_id] : null;
+    const row = document.createElement('div');
+    row.className = 'act-jugador-row';
+    row.innerHTML = `
+      ${avatarHtml(j, 'crest', 'crest-ph')}
+      <span class="admin-name">${escapeHtml(j.nombre_tv)}</span>
+      <span class="muted-note">${club ? escapeHtml(club.nombre) : ''}</span>
+      ${['LOCAL','VISITA'].map(kit => `
+        <div class="act-kit-group">
+          <div class="leds">${TIPOS_ACTING.map(t => {
+            const f = fotoMap[j.id + '_' + t + '_' + kit];
+            const estado = f ? f.estado : 'faltante';
+            return `<span class="led" data-estado="${estado}" title="${TIPO_LABELS[t]} · ${KIT_LABELS[kit]} · ${estado}" data-url="${f && f.url ? escapeHtml(f.url) : ''}"></span>`;
+          }).join('')}</div>
+        </div>`).join('')}
+    `;
+    row.querySelectorAll('.led').forEach(led => {
+      led.addEventListener('click', () => { if(led.dataset.url) window.open(led.dataset.url, '_blank'); });
+    });
+    list.appendChild(row);
+  });
+}
+document.getElementById('actingsSearchInput').addEventListener('input', renderActingsGrid);
+document.getElementById('actingsSortSelect').addEventListener('change', renderActingsGrid);
+
+// ---- Actings: exportar Excel para Flowics ----
+const ACTINGS_EXPORT_COLS = [
+  {key:'jugador', label:'Jugador'},
+  {key:'club', label:'Equipo'},
+  {key:'campeonato', label:'Campeonato'},
+  {key:'tipo', label:'Tipo de foto'},
+  {key:'kit', label:'Kit'},
+  {key:'estado', label:'Estado'},
+  {key:'url', label:'URL'},
+];
+let actingsExportColConfig = ACTINGS_EXPORT_COLS.map(c => ({...c, visible: c.key !== 'estado'}));
+let actingsExportRows = [];
+
+async function refreshActingsExport(){
+  const campId = document.getElementById('actingsExportCamp').value || null;
+  const soloProcesadas = document.getElementById('actingsExportEstado').value === 'procesada';
+
+  let query = sb.from('jugador_fotos')
+    .select('tipo,kit,estado,url,jugadores_maestro!jugador_id(nombre_tv,club_id)')
+    .not('url','is',null)
+    .limit(20000);
+  if(soloProcesadas) query = query.eq('estado','procesada');
+  const { data: fotos, error } = await query;
+  if(error){ console.error(error); return; }
+
+  const clubById = {};
+  allClubes.forEach(c => clubById[c.id] = c);
+
+  // para filtrar por campeonato: qué clubes participan en él
+  let clubesDelCamp = null;
+  let campNombre = '';
+  if(campId){
+    const { data: eqs } = await sb.from('equipos').select('club_id').eq('campeonato_id', campId).limit(5000);
+    clubesDelCamp = new Set((eqs || []).map(e => e.club_id).filter(Boolean));
+    campNombre = (campeonatosList.find(c => c.id === campId) || {}).nombre || '';
+  }
+
+  actingsExportRows = (fotos || []).map(f => {
+    const jm = f.jugadores_maestro;
+    if(!jm) return null;
+    const club = jm.club_id ? clubById[jm.club_id] : null;
+    if(clubesDelCamp && !(jm.club_id && clubesDelCamp.has(jm.club_id))) return null;
+    return {
+      jugador: jm.nombre_tv || '',
+      club: club ? club.nombre : '',
+      campeonato: campNombre,
+      tipo: TIPO_LABELS[f.tipo] || f.tipo,
+      kit: KIT_LABELS[f.kit] || f.kit,
+      estado: f.estado,
+      url: f.url,
+    };
+  }).filter(Boolean).sort((a,b) => a.club.localeCompare(b.club) || a.jugador.localeCompare(b.jugador));
+
+  document.getElementById('actingsExportCount').textContent = `${actingsExportRows.length} fila(s)`;
+  renderActingsExportTable();
+}
+document.getElementById('actingsExportCamp').addEventListener('change', () => refreshActingsExport());
+document.getElementById('actingsExportEstado').addEventListener('change', () => refreshActingsExport());
+
+function renderActingsExportTable(){
+  const visibles = actingsExportColConfig.filter(c => c.visible);
+  const table = document.getElementById('actingsExportTable');
+  table.innerHTML = '';
+  const thead = document.createElement('thead');
+  const headTr = document.createElement('tr');
+  headTr.innerHTML = visibles.map(c => `
+    <th draggable="true" data-key="${c.key}">
+      <span class="th-inner"><span>${c.label}</span><span class="th-hide" data-key="${c.key}" title="Ocultar columna">✕</span></span>
+    </th>`).join('');
+  thead.appendChild(headTr);
+  table.appendChild(thead);
+
+  headTr.querySelectorAll('.th-hide').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      actingsExportColConfig.find(c => c.key === btn.dataset.key).visible = false;
+      renderActingsExportTable();
+    });
+  });
+  let dragKey = null;
+  headTr.querySelectorAll('th[draggable="true"]').forEach(th => {
+    th.addEventListener('dragstart', e => { dragKey = th.dataset.key; e.dataTransfer.effectAllowed='move'; th.classList.add('dragging'); });
+    th.addEventListener('dragend', () => th.classList.remove('dragging'));
+    th.addEventListener('dragover', e => { e.preventDefault(); th.classList.add('dragover'); });
+    th.addEventListener('dragleave', () => th.classList.remove('dragover'));
+    th.addEventListener('drop', async e => {
+      e.preventDefault(); th.classList.remove('dragover');
+      const targetKey = th.dataset.key;
+      if(!dragKey || dragKey === targetKey) return;
+      const from = actingsExportColConfig.findIndex(c => c.key === dragKey);
+      const to = actingsExportColConfig.findIndex(c => c.key === targetKey);
+      const [moved] = actingsExportColConfig.splice(from, 1);
+      actingsExportColConfig.splice(to, 0, moved);
+      dragKey = null;
+      renderActingsExportTable();
+    });
+  });
+
+  const tbody = document.createElement('tbody');
+  const ocultas = actingsExportColConfig.filter(c => !c.visible);
+  if(ocultas.length){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="${visibles.length}" style="padding:8px;">
+      <span class="muted-note">Ocultas: </span>${ocultas.map(c => `<button class="addcol-btn" data-show="${c.key}" style="margin-right:6px;">+ ${c.label}</button>`).join('')}
+    </td>`;
+    tr.querySelectorAll('[data-show]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        actingsExportColConfig.find(c => c.key === btn.dataset.show).visible = true;
+          renderActingsExportTable();
+      });
+    });
+    tbody.appendChild(tr);
+  }
+  actingsExportRows.slice(0, 50).forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = visibles.map(c => `<td title="${escapeHtml(row[c.key]||'')}">${escapeHtml(String(row[c.key]||'').slice(0,60))}</td>`).join('');
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+function actingsExportData(formato){
+  const visibles = actingsExportColConfig.filter(c => c.visible);
+  if(visibles.length === 0){ alert('Dejá al menos una columna visible.'); return; }
+  if(actingsExportRows.length === 0){ alert('No hay filas para exportar.'); return; }
+  const nombreArchivo = 'fotos_flowics';
+
+  if(formato === 'csv'){
+    const delim = ';';
+    const lines = [visibles.map(c => c.label).join(delim)];
+    actingsExportRows.forEach(row => {
+      lines.push(visibles.map(c => csvCell(row[c.key] || '', delim)).join(delim));
+    });
+    descargarArchivo('\uFEFF' + lines.join('\r\n'), `${nombreArchivo}.csv`, 'text/csv;charset=utf-8;');
+  } else {
+    // Excel via SpreadsheetML — lo abre Excel nativamente sin librerías extra
+    const esc = s => escapeHtml(String(s == null ? '' : s));
+    const filas = actingsExportRows.map(row =>
+      `<Row>${visibles.map(c => `<Cell><Data ss:Type="String">${esc(row[c.key])}</Data></Cell>`).join('')}</Row>`
+    ).join('');
+    const header = `<Row>${visibles.map(c => `<Cell><Data ss:Type="String">${esc(c.label)}</Data></Cell>`).join('')}</Row>`;
+    const xml = `<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="Flowics"><Table>${header}${filas}</Table></Worksheet></Workbook>`;
+    descargarArchivo(xml, `${nombreArchivo}.xls`, 'application/vnd.ms-excel');
+  }
+}
+function descargarArchivo(contenido, nombre, mime){
+  const blob = new Blob([contenido], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+document.getElementById('actingsExportBtn').addEventListener('click', () => actingsExportData('xls'));
+document.getElementById('actingsExportCsvBtn').addEventListener('click', () => actingsExportData('csv'));
+
+
+// ================== APARTADO: FLOWICS ==================
+// Controles modulares: cada uno es una tarjeta con un "tipo" que define qué muestra al abrirlo.
+// Para sumar un tipo nuevo: agregarlo al <select> de tipos, al SQL (check del campo tipo),
+// crear un <div id="flowicsTipo-XXX"> en el HTML y su rama en renderFlowicsDetail().
+let flowicsControles = [];
+let flowicsDetailId = null;
+
+const FLOWICS_TIPO_LABEL = { formacion: 'Formación', tabla: 'Tabla' };
+
+async function loadFlowicsControles(){
+  const { data, error } = await sb.from('flowics_controles').select('*').order('created_at').limit(500);
+  if(error){ console.error(error); return; }
+  flowicsControles = data || [];
+}
+
+function showFlowicsMenu(){
+  flowicsDetailId = null;
+  document.getElementById('flowicsMenuView').style.display = 'block';
+  document.getElementById('flowicsDetailView').style.display = 'none';
+  renderFlowicsCards();
+}
+function renderFlowicsCards(){
+  const box = document.getElementById('flowicsCardsList');
+  const empty = document.getElementById('flowicsCardsEmpty');
+  empty.style.display = flowicsControles.length === 0 ? 'block' : 'none';
+  box.innerHTML = '';
+  flowicsControles.forEach(ctrl => {
+    const card = document.createElement('div');
+    card.className = 'admin-card';
+    card.innerHTML = `<h4>${escapeHtml(ctrl.nombre)}</h4><p>${FLOWICS_TIPO_LABEL[ctrl.tipo] || ctrl.tipo}</p>`;
+    card.addEventListener('click', () => openFlowicsDetail(ctrl.id));
+    box.appendChild(card);
+  });
+}
+document.getElementById('flowicsNewBtn').addEventListener('click', async () => {
+  const nombreInput = document.getElementById('flowicsNewNombre');
+  const nombre = nombreInput.value.trim();
+  if(!nombre) return;
+  const tipo = document.getElementById('flowicsNewTipo').value;
+  const { error } = await sb.from('flowics_controles').insert({ nombre, tipo });
+  if(error){ alert('Error creando el control: ' + error.message); return; }
+  nombreInput.value = '';
+  await loadFlowicsControles();
+  renderFlowicsCards();
+});
+document.getElementById('flowicsNewNombre').addEventListener('keydown', e => {
+  if(e.key === 'Enter') document.getElementById('flowicsNewBtn').click();
+});
+document.getElementById('flowicsBackBtn').addEventListener('click', showFlowicsMenu);
+
+async function openFlowicsDetail(id){
+  flowicsDetailId = id;
+  document.getElementById('flowicsMenuView').style.display = 'none';
+  document.getElementById('flowicsDetailView').style.display = 'block';
+  await renderFlowicsDetail();
+}
+async function renderFlowicsDetail(){
+  const ctrl = flowicsControles.find(c => c.id === flowicsDetailId);
+  if(!ctrl){ showFlowicsMenu(); return; }
+  document.getElementById('flowicsDetailNombre').textContent = ctrl.nombre;
+  document.getElementById('flowicsDetailTipo').textContent = FLOWICS_TIPO_LABEL[ctrl.tipo] || ctrl.tipo;
+  document.getElementById('flowicsDeleteBtn').onclick = async () => {
+    if(!confirm(`¿Eliminar el control "${ctrl.nombre}"?`)) return;
+    await sb.from('flowics_controles').delete().eq('id', ctrl.id);
+    await loadFlowicsControles();
+    showFlowicsMenu();
+  };
+  document.getElementById('flowicsTipo-formacion').style.display = ctrl.tipo === 'formacion' ? 'block' : 'none';
+  document.getElementById('flowicsTipo-tabla').style.display = ctrl.tipo === 'tabla' ? 'block' : 'none';
+}
 
 function renderAll(){ renderBD(); renderLibero(); }
 </script>
