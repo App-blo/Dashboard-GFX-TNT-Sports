@@ -402,6 +402,55 @@
   .club-detail-actions{display:flex;flex-direction:column;gap:8px;margin-left:auto;}
   .club-detail-actions button{white-space:nowrap;}
 
+  /* ---- editor de formaciones ---- */
+  .fmt-toolbar{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;margin-bottom:14px;
+  }
+  .fmt-toolbar button{font-size:12px;padding:8px 12px;}
+  .fmt-toolbar label{display:flex;align-items:center;gap:6px;}
+  .fmt-toolbar input[type=number], .fmt-toolbar input[type=text]{
+    background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:6px;padding:5px 7px;font-size:12px;font-family:var(--mono);
+  }
+  .fmt-toolbar input[type=color]{width:32px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer;}
+  .fmt-sep{width:1px;height:22px;background:var(--line);}
+
+  .fmt-workspace{display:flex;gap:14px;align-items:flex-start;}
+  .fmt-canvas-wrap{
+    flex:1;min-width:0;overflow:auto;background:var(--panel);
+    border:1px solid var(--line);border-radius:10px;padding:14px;
+    /* damero para que se note lo transparente */
+    background-image:linear-gradient(45deg,#0a2c3b 25%,transparent 25%),linear-gradient(-45deg,#0a2c3b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#0a2c3b 75%),linear-gradient(-45deg,transparent 75%,#0a2c3b 75%);
+    background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;
+  }
+  #fmtCanvas{position:relative;transform-origin:top left;outline:1px dashed var(--line);}
+  .fmt-el{position:absolute;box-sizing:border-box;cursor:move;user-select:none;}
+  .fmt-el.selected{outline:2px solid var(--accent);}
+  .fmt-el .fmt-handle{
+    position:absolute;right:-5px;bottom:-5px;width:11px;height:11px;
+    background:var(--accent);border-radius:2px;cursor:nwse-resize;
+  }
+  .fmt-el-jugador{display:flex;flex-direction:column;align-items:center;overflow:hidden;}
+  .fmt-el-jugador img{width:100%;flex:1;object-fit:cover;object-position:top;min-height:0;}
+  .fmt-el-jugador .fmt-nombre{width:100%;text-align:center;padding:2px 4px;box-sizing:border-box;}
+  .fmt-el-texto{display:flex;align-items:center;}
+  .fmt-el-imagen img{width:100%;height:100%;object-fit:contain;display:block;}
+
+  .fmt-inspector{
+    width:250px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:14px;max-height:74vh;overflow-y:auto;
+  }
+  .fmt-inspector label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;}
+  .fmt-inspector input[type=text], .fmt-inspector input[type=number], .fmt-inspector select{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:6px;padding:7px 8px;font-size:12.5px;
+  }
+  .fmt-inspector input[type=color]{width:100%;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer;}
+  .fmt-inspector .row2{display:flex;gap:8px;}
+  .fmt-inspector .row2 > div{flex:1;}
+
   .tag-chips{display:flex;flex-wrap:wrap;gap:8px;}
   .tag-chip{
     font-family:var(--mono);font-size:12px;letter-spacing:.02em;
@@ -818,9 +867,32 @@
       </div>
 
       <div id="flowicsTipo-formacion" style="display:none;">
-        <div class="placeholder-panel">
-          <h3>Formación drag-and-drop</h3>
-          <p>Este tipo de control todavía no está construido — lo armamos cuando quieras. La idea es acomodar los jugadores en la cancha acá y usar esta página como contenido externo en Flowics.</p>
+        <div class="fmt-toolbar">
+          <button class="ghost" data-add="jugador">+ Tarjeta jugador</button>
+          <button class="ghost" data-add="texto">+ Texto</button>
+          <button class="ghost" data-add="forma">+ Forma</button>
+          <button class="ghost" id="fmtAddImagenBtn">+ Imagen</button>
+          <input type="file" id="fmtImagenInput" accept="image/*" style="display:none;">
+          <span class="fmt-sep"></span>
+          <label class="muted-note">Lienzo
+            <input type="number" id="fmtCanvasW" value="1920" min="100" step="10" style="width:80px;">×
+            <input type="number" id="fmtCanvasH" value="1080" min="100" step="10" style="width:80px;">
+          </label>
+          <label class="muted-note">Fondo <input type="color" id="fmtCanvasBg" value="#001824"></label>
+          <label class="muted-note"><input type="checkbox" id="fmtCanvasTransp" checked> transparente</label>
+          <span class="fmt-sep"></span>
+          <button class="ghost" id="fmtDeleteElBtn">Eliminar elemento</button>
+          <button class="primary" id="fmtSaveBtn">Guardar</button>
+          <button class="ghost" id="fmtOutputBtn">Link para Flowics</button>
+        </div>
+
+        <div class="fmt-workspace">
+          <div class="fmt-canvas-wrap">
+            <div id="fmtCanvas"></div>
+          </div>
+          <aside class="fmt-inspector" id="fmtInspector">
+            <p class="muted-note">Seleccioná un elemento para editar sus propiedades.</p>
+          </aside>
         </div>
       </div>
 
@@ -1122,6 +1194,9 @@ async function updateAuthUI(session){
   }
 }
 (async () => {
+  // modo output: si la URL trae ?output=<id>, se pinta solo la gráfica, sin login
+  const outputId = new URLSearchParams(location.search).get('output');
+  if(outputId){ await initOutputMode(outputId); return; }
   const { data: { session } } = await sb.auth.getSession();
   updateAuthUI(session);
 })();
@@ -2587,6 +2662,303 @@ async function renderFlowicsDetail(){
   };
   document.getElementById('flowicsTipo-formacion').style.display = ctrl.tipo === 'formacion' ? 'block' : 'none';
   document.getElementById('flowicsTipo-tabla').style.display = ctrl.tipo === 'tabla' ? 'block' : 'none';
+  if(ctrl.tipo === 'formacion'){
+    if(!allJugadoresMaestro.length) await loadJugadoresMaestro();
+    await loadMediosCuerpo();
+    populateJugadoresDatalist();
+    fmtCargarDoc(ctrl);
+  }
+}
+
+// ================== EDITOR DE FORMACIONES (tipo: formacion) ==================
+// El diseño completo (lienzo + elementos con sus posiciones y estilos) se guarda
+// como JSON en el campo config del control. La vista de output lo lee y lo pinta igual.
+let fmtDoc = null;          // { canvas:{w,h,bg,transparente}, elementos:[...] }
+let fmtSelId = null;
+let fmtZoom = 1;
+
+function fmtDocPorDefecto(){
+  return { canvas:{ w:1920, h:1080, bg:'#001824', transparente:true }, elementos:[] };
+}
+function fmtNuevoId(){ return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function fmtCargarDoc(ctrl){
+  fmtDoc = (ctrl.config && ctrl.config.doc) ? JSON.parse(JSON.stringify(ctrl.config.doc)) : fmtDocPorDefecto();
+  fmtSelId = null;
+  document.getElementById('fmtCanvasW').value = fmtDoc.canvas.w;
+  document.getElementById('fmtCanvasH').value = fmtDoc.canvas.h;
+  document.getElementById('fmtCanvasBg').value = fmtDoc.canvas.bg || '#001824';
+  document.getElementById('fmtCanvasTransp').checked = !!fmtDoc.canvas.transparente;
+  fmtRender();
+}
+
+function fmtRender(){
+  const canvas = document.getElementById('fmtCanvas');
+  const wrap = canvas.parentElement;
+  // escala para que el lienzo entre en el ancho disponible
+  const dispo = wrap.clientWidth - 28;
+  fmtZoom = Math.min(1, dispo / fmtDoc.canvas.w);
+  canvas.style.width = fmtDoc.canvas.w + 'px';
+  canvas.style.height = fmtDoc.canvas.h + 'px';
+  canvas.style.transform = `scale(${fmtZoom})`;
+  wrap.style.height = (fmtDoc.canvas.h * fmtZoom + 28) + 'px';
+  canvas.style.background = fmtDoc.canvas.transparente ? 'transparent' : fmtDoc.canvas.bg;
+
+  canvas.innerHTML = '';
+  fmtDoc.elementos.forEach(el => {
+    const node = document.createElement('div');
+    node.className = 'fmt-el fmt-el-' + el.tipo + (el.id === fmtSelId ? ' selected' : '');
+    node.style.left = el.x + 'px';
+    node.style.top = el.y + 'px';
+    node.style.width = el.w + 'px';
+    node.style.height = el.h + 'px';
+    node.dataset.id = el.id;
+    node.innerHTML = fmtContenidoHtml(el);
+    if(el.id === fmtSelId){
+      const handle = document.createElement('div');
+      handle.className = 'fmt-handle';
+      node.appendChild(handle);
+    }
+    canvas.appendChild(node);
+  });
+  fmtRenderInspector();
+}
+
+function fmtContenidoHtml(el){
+  if(el.tipo === 'jugador'){
+    const j = el.jugadorId ? allJugadoresMaestro.find(x => x.id === el.jugadorId) : null;
+    const foto = j ? mediosCuerpoPorJugador[j.id] : null;
+    const nombre = j ? j.nombre_tv : '(sin jugador)';
+    return `
+      ${foto ? `<img src="${escapeHtml(foto)}" alt="">` : `<div style="flex:1;width:100%;background:${escapeHtml(el.colorFondo||'#0a2c3b')};"></div>`}
+      ${el.mostrarNombre === false ? '' : `<div class="fmt-nombre" style="color:${escapeHtml(el.color||'#ffffff')};background:${escapeHtml(el.colorFondo||'transparent')};font-size:${el.fontSize||16}px;font-weight:${el.bold?700:400};font-family:var(--sans);">${escapeHtml(nombre)}</div>`}`;
+  }
+  if(el.tipo === 'texto'){
+    return `<div style="width:100%;color:${escapeHtml(el.color||'#ffffff')};font-size:${el.fontSize||32}px;font-weight:${el.bold?700:400};text-align:${el.align||'left'};font-family:var(--sans);">${escapeHtml(el.texto||'Texto')}</div>`;
+  }
+  if(el.tipo === 'forma'){
+    return `<div style="width:100%;height:100%;background:${escapeHtml(el.colorFondo||'#ff27ff')};border-radius:${el.radio||0}px;opacity:${el.opacidad==null?1:el.opacidad};"></div>`;
+  }
+  if(el.tipo === 'imagen'){
+    return el.url ? `<img src="${escapeHtml(el.url)}" alt="">` : '<div style="width:100%;height:100%;background:#0a2c3b;"></div>';
+  }
+  return '';
+}
+
+// ---- inspector de propiedades ----
+function fmtRenderInspector(){
+  const box = document.getElementById('fmtInspector');
+  const el = fmtDoc.elementos.find(e => e.id === fmtSelId);
+  if(!el){ box.innerHTML = '<p class="muted-note">Seleccioná un elemento para editar sus propiedades.</p>'; return; }
+
+  let campos = `
+    <div class="row2">
+      <div><label>X</label><input type="number" data-p="x" value="${el.x}"></div>
+      <div><label>Y</label><input type="number" data-p="y" value="${el.y}"></div>
+    </div>
+    <div class="row2">
+      <div><label>Ancho</label><input type="number" data-p="w" value="${el.w}"></div>
+      <div><label>Alto</label><input type="number" data-p="h" value="${el.h}"></div>
+    </div>`;
+
+  if(el.tipo === 'jugador'){
+    campos += `<label>Jugador</label>
+      <input type="text" list="actingsJugadoresDatalist" data-p="jugadorNombre" value="${escapeHtml(el.jugadorNombre||'')}" placeholder="Buscar jugador…">
+      <label><input type="checkbox" data-p="mostrarNombre" ${el.mostrarNombre === false ? '' : 'checked'}> Mostrar nombre</label>
+      <label>Color del texto</label><input type="color" data-p="color" value="${el.color||'#ffffff'}">
+      <label>Fondo del nombre</label><input type="color" data-p="colorFondo" value="${el.colorFondo||'#001824'}">
+      <label>Tamaño de fuente</label><input type="number" data-p="fontSize" value="${el.fontSize||16}">
+      <label><input type="checkbox" data-p="bold" ${el.bold?'checked':''}> Negrita</label>`;
+  }
+  if(el.tipo === 'texto'){
+    campos += `<label>Texto</label><input type="text" data-p="texto" value="${escapeHtml(el.texto||'')}">
+      <label>Color</label><input type="color" data-p="color" value="${el.color||'#ffffff'}">
+      <label>Tamaño</label><input type="number" data-p="fontSize" value="${el.fontSize||32}">
+      <label>Alineación</label><select data-p="align">
+        <option value="left" ${el.align==='left'?'selected':''}>Izquierda</option>
+        <option value="center" ${el.align==='center'?'selected':''}>Centro</option>
+        <option value="right" ${el.align==='right'?'selected':''}>Derecha</option>
+      </select>
+      <label><input type="checkbox" data-p="bold" ${el.bold?'checked':''}> Negrita</label>`;
+  }
+  if(el.tipo === 'forma'){
+    campos += `<label>Color</label><input type="color" data-p="colorFondo" value="${el.colorFondo||'#ff27ff'}">
+      <label>Redondeo</label><input type="number" data-p="radio" value="${el.radio||0}">
+      <label>Opacidad (0 a 1)</label><input type="number" step="0.05" min="0" max="1" data-p="opacidad" value="${el.opacidad==null?1:el.opacidad}">`;
+  }
+  box.innerHTML = `<p class="muted-note" style="margin:0 0 4px;">${el.tipo}</p>` + campos;
+
+  box.querySelectorAll('[data-p]').forEach(input => {
+    const evento = (input.type === 'checkbox' || input.tagName === 'SELECT' || input.type === 'color') ? 'change' : 'input';
+    input.addEventListener(evento, () => {
+      const p = input.dataset.p;
+      let v = input.type === 'checkbox' ? input.checked : input.value;
+      if(['x','y','w','h','fontSize','radio'].includes(p)) v = parseFloat(v) || 0;
+      if(p === 'opacidad') v = Math.max(0, Math.min(1, parseFloat(v) || 0));
+      if(p === 'jugadorNombre'){
+        el.jugadorNombre = v;
+        const j = resolveJugadorPorTexto(v);
+        el.jugadorId = j ? j.id : null;
+      } else {
+        el[p] = v;
+      }
+      fmtRenderSoloCanvas();
+    });
+  });
+}
+// redibuja solo el lienzo, sin tocar el inspector (para no perder el foco mientras se escribe)
+function fmtRenderSoloCanvas(){
+  const canvas = document.getElementById('fmtCanvas');
+  canvas.style.background = fmtDoc.canvas.transparente ? 'transparent' : fmtDoc.canvas.bg;
+  canvas.innerHTML = '';
+  fmtDoc.elementos.forEach(el => {
+    const node = document.createElement('div');
+    node.className = 'fmt-el fmt-el-' + el.tipo + (el.id === fmtSelId ? ' selected' : '');
+    node.style.left = el.x + 'px';
+    node.style.top = el.y + 'px';
+    node.style.width = el.w + 'px';
+    node.style.height = el.h + 'px';
+    node.dataset.id = el.id;
+    node.innerHTML = fmtContenidoHtml(el);
+    if(el.id === fmtSelId){
+      const handle = document.createElement('div');
+      handle.className = 'fmt-handle';
+      node.appendChild(handle);
+    }
+    canvas.appendChild(node);
+  });
+}
+
+// ---- agregar elementos ----
+document.querySelectorAll('#flowicsTipo-formacion [data-add]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tipo = btn.dataset.add;
+    const base = { id: fmtNuevoId(), tipo, x: 60, y: 60 };
+    if(tipo === 'jugador') Object.assign(base, { w: 200, h: 280, color:'#ffffff', colorFondo:'#001824', fontSize:16, bold:true, mostrarNombre:true });
+    if(tipo === 'texto') Object.assign(base, { w: 400, h: 60, texto:'Texto', color:'#ffffff', fontSize:32, align:'left', bold:true });
+    if(tipo === 'forma') Object.assign(base, { w: 300, h: 120, colorFondo:'#ff27ff', radio:8, opacidad:1 });
+    fmtDoc.elementos.push(base);
+    fmtSelId = base.id;
+    fmtRender();
+  });
+});
+document.getElementById('fmtAddImagenBtn').addEventListener('click', () => document.getElementById('fmtImagenInput').click());
+document.getElementById('fmtImagenInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+  const path = `${flowicsDetailId}_${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('graficas').upload(path, file, { upsert: true, contentType: file.type });
+  if(error){ alert('Error subiendo la imagen: ' + error.message); return; }
+  const { data: pub } = sb.storage.from('graficas').getPublicUrl(path);
+  const el = { id: fmtNuevoId(), tipo:'imagen', x:60, y:60, w:400, h:300, url: pub.publicUrl };
+  fmtDoc.elementos.push(el);
+  fmtSelId = el.id;
+  fmtRender();
+  e.target.value = '';
+});
+document.getElementById('fmtDeleteElBtn').addEventListener('click', () => {
+  if(!fmtSelId) return;
+  fmtDoc.elementos = fmtDoc.elementos.filter(e => e.id !== fmtSelId);
+  fmtSelId = null;
+  fmtRender();
+});
+
+// ---- lienzo: seleccionar, arrastrar, redimensionar ----
+(function fmtInitCanvasEvents(){
+  const canvas = document.getElementById('fmtCanvas');
+  let modo = null, startX = 0, startY = 0, orig = null;
+
+  canvas.addEventListener('mousedown', (e) => {
+    const handle = e.target.closest('.fmt-handle');
+    const node = e.target.closest('.fmt-el');
+    if(!node){ fmtSelId = null; fmtRender(); return; }
+    const el = fmtDoc.elementos.find(x => x.id === node.dataset.id);
+    if(!el) return;
+    fmtSelId = el.id;
+    modo = handle ? 'resize' : 'move';
+    startX = e.clientX; startY = e.clientY;
+    orig = { x: el.x, y: el.y, w: el.w, h: el.h };
+    fmtRender();
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if(!modo || !fmtSelId) return;
+    const el = fmtDoc.elementos.find(x => x.id === fmtSelId);
+    if(!el) return;
+    const dx = (e.clientX - startX) / fmtZoom;
+    const dy = (e.clientY - startY) / fmtZoom;
+    if(modo === 'move'){ el.x = Math.round(orig.x + dx); el.y = Math.round(orig.y + dy); }
+    else { el.w = Math.max(20, Math.round(orig.w + dx)); el.h = Math.max(20, Math.round(orig.h + dy)); }
+    fmtRenderSoloCanvas();
+  });
+  window.addEventListener('mouseup', () => { if(modo){ modo = null; fmtRenderInspector(); } });
+})();
+
+// ---- lienzo: tamaño y fondo ----
+['fmtCanvasW','fmtCanvasH'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    fmtDoc.canvas.w = parseInt(document.getElementById('fmtCanvasW').value) || 1920;
+    fmtDoc.canvas.h = parseInt(document.getElementById('fmtCanvasH').value) || 1080;
+    fmtRender();
+  });
+});
+document.getElementById('fmtCanvasBg').addEventListener('change', (e) => { fmtDoc.canvas.bg = e.target.value; fmtRender(); });
+document.getElementById('fmtCanvasTransp').addEventListener('change', (e) => { fmtDoc.canvas.transparente = e.target.checked; fmtRender(); });
+
+// ---- guardar y link de output ----
+document.getElementById('fmtSaveBtn').addEventListener('click', async () => {
+  const ctrl = flowicsControles.find(c => c.id === flowicsDetailId);
+  if(!ctrl) return;
+  const config = { ...(ctrl.config||{}), doc: fmtDoc };
+  const { error } = await sb.from('flowics_controles').update({ config, updated_at: new Date().toISOString() }).eq('id', ctrl.id);
+  if(error){ alert('Error guardando: ' + error.message); return; }
+  ctrl.config = config;
+  alert('Diseño guardado.');
+});
+document.getElementById('fmtOutputBtn').addEventListener('click', () => {
+  const url = location.origin + location.pathname + '?output=' + flowicsDetailId;
+  prompt('Pegá esta URL como external content en Flowics:', url);
+});
+
+// ================== VISTA OUTPUT (lo que carga Flowics) ==================
+// Se activa con ?output=<id del control> en la URL. Muestra solo la gráfica,
+// sin login ni interfaz, con fondo transparente para superponer al aire.
+async function initOutputMode(controlId){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'none';
+  document.body.style.background = 'transparent';
+  document.body.style.padding = '0';
+
+  const cont = document.createElement('div');
+  cont.id = 'outputRoot';
+  cont.style.cssText = 'position:fixed;inset:0;overflow:hidden;';
+  document.body.appendChild(cont);
+
+  async function pintar(){
+    const { data: ctrl } = await sb.from('flowics_controles').select('config').eq('id', controlId).maybeSingle();
+    if(!ctrl || !ctrl.config || !ctrl.config.doc) return;
+    const doc = ctrl.config.doc;
+    const { data: jugadores } = await sb.from('jugadores_maestro').select('id,nombre_tv').limit(50000);
+    allJugadoresMaestro = jugadores || [];
+    const { data: fotos } = await sb.from('jugador_fotos').select('jugador_id,kit,url').eq('tipo','MEDIO_CUERPO').limit(50000);
+    const map = {};
+    (fotos || []).forEach(f => { if(f.url && (f.kit === 'LOCAL' || !map[f.jugador_id])) map[f.jugador_id] = f.url; });
+    mediosCuerpoPorJugador = map;
+
+    // escala el diseño para que ocupe la ventana manteniendo la proporción
+    const escala = Math.min(window.innerWidth / doc.canvas.w, window.innerHeight / doc.canvas.h);
+    cont.innerHTML = `<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(${escala});width:${doc.canvas.w}px;height:${doc.canvas.h}px;background:${doc.canvas.transparente?'transparent':doc.canvas.bg};">
+      ${doc.elementos.map(el => `<div class="fmt-el fmt-el-${el.tipo}" style="position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">${fmtContenidoHtml(el)}</div>`).join('')}
+    </div>`;
+  }
+  await pintar();
+  window.addEventListener('resize', pintar);
+  // se actualiza solo cuando alguien guarda cambios en el editor
+  sb.channel('output-' + controlId)
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'flowics_controles', filter:'id=eq.'+controlId }, pintar)
+    .subscribe();
 }
 
 function renderAll(){ renderBD(); renderLibero(); }
