@@ -452,7 +452,10 @@
   .fmt-capa .agarre{color:var(--muted);font-size:11px;cursor:grab;}
   .fmt-capa .nombre{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;outline:none;padding:2px 3px;border-radius:4px;}
   .fmt-capa .nombre:focus{background:#0d3244;box-shadow:inset 0 0 0 1px var(--accent);}
-  .fmt-capa .ojo{opacity:.6;cursor:pointer;font-size:11px;}
+  .fmt-capa .ojo{opacity:.75;cursor:pointer;font-size:12px;filter:grayscale(1);}
+  .fmt-capa .ojo:hover{opacity:1;filter:none;}
+  .fmt-capa .ojo.apagado{opacity:.5;}
+  .fmt-capa:has(.ojo.apagado) .nombre{opacity:.45;text-decoration:line-through;}
 
   .fmt-jug-item{
     display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;
@@ -511,6 +514,15 @@
     background:var(--panel);border:1px solid var(--line);border-radius:10px;
     padding:10px 12px;margin-bottom:14px;
   }
+  .fmt-barras{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .fmt-barras .fmt-toolbar{margin-bottom:0;}
+  .fmt-ico-btn{display:flex;align-items:center;justify-content:center;padding:7px 10px;}
+  .fmt-ico-btn svg{width:17px;height:17px;display:block;}
+  .fmt-ico-btn:disabled{opacity:.3;cursor:not-allowed;}
+  .fmt-barra-lbl{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);border-right:1px solid var(--line);padding-right:10px;margin-right:2px;
+  }
   .fmt-toolbar button{font-size:12px;padding:8px 12px;}
   .fmt-toolbar label{display:flex;align-items:center;gap:6px;}
   .fmt-toolbar input[type=number], .fmt-toolbar input[type=text]{
@@ -528,13 +540,39 @@
     background-image:linear-gradient(45deg,#0a2c3b 25%,transparent 25%),linear-gradient(-45deg,#0a2c3b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#0a2c3b 75%),linear-gradient(-45deg,transparent 75%,#0a2c3b 75%);
     background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;
   }
-  #fmtCanvas{position:relative;transform-origin:top left;outline:1px dashed var(--line);}
+  #fmtCanvasHolder{position:relative;}
+  #fmtCanvas{position:absolute;top:0;left:0;transform-origin:top left;outline:1px dashed var(--line);}
+  .fmt-capa .nombre{user-select:none;}
+  .fmt-capa .nombre[contenteditable="true"]{user-select:text;}
   .fmt-el{position:absolute;box-sizing:border-box;cursor:move;user-select:none;}
   .fmt-el.selected{outline:2px solid var(--accent);}
   .fmt-el .fmt-handle{
     position:absolute;right:-5px;bottom:-5px;width:11px;height:11px;
     background:var(--accent);border-radius:2px;cursor:nwse-resize;
   }
+  .fmt-grupo{overflow:visible;}
+  .fmt-el-imagen, .fmt-el-texto{overflow:hidden;}
+  .fmt-capa .plegar{color:var(--muted);cursor:pointer;font-size:10px;width:10px;}
+  .fmt-seccion-prov{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);}
+  .fmt-col-izq{display:flex;flex-direction:column;gap:12px;flex-shrink:0;}
+  .fmt-tarjeta-textos{
+    width:280px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:12px;box-sizing:border-box;
+  }
+  .fmt-txt-lbl{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .fmt-txt-ctrl{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:6px;padding:7px 8px;font-size:12.5px;
+  }
+  .fmt-txt-ctrl:focus{outline:none;border-color:var(--accent);}
+  .fmt-capa.fmt-prov{cursor:pointer;}
+  .fmt-capa .prov-ic{color:var(--accent);font-size:12px;}
+  .fmt-capa .nombre[contenteditable="true"]{cursor:text;}
+  .fmt-capa .badge-datos{
+    font-family:var(--mono);font-size:8.5px;background:var(--accent-dim);color:#ffb9fb;
+    border-radius:8px;padding:1px 5px;
+  }
+  .fmt-el.sel{outline:2px solid var(--accent);}
   .fmt-el-jugador{overflow:hidden;}
   .fmt-sub{position:absolute;overflow:hidden;}
   .fmt-sub img{width:100%;height:100%;display:block;}
@@ -549,12 +587,41 @@
   }
   .fmt-inspector label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;}
   .fmt-inspector input[type=number]{cursor:ew-resize;}
+  .fmt-inspector select:disabled{opacity:.5;cursor:not-allowed;}
   .fmt-inspector input[type=text], .fmt-inspector input[type=number], .fmt-inspector select{
     width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
     border-radius:6px;padding:7px 8px;font-size:12.5px;
   }
   .fmt-inspector input[type=color]{width:100%;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer;}
   .fmt-inspector .row2{display:flex;gap:8px;}
+  .fmt-opacidad{display:flex;align-items:center;gap:10px;}
+  .fmt-inspector .fmt-opacidad input.op-num{
+    width:52px;flex:none;text-align:center;font-family:var(--mono);font-size:11.5px;padding:5px 4px;
+  }
+  /* barra propia: línea fina + punto, en vez del control por defecto del navegador */
+  .fmt-inspector .fmt-opacidad input.op-slider{
+    -webkit-appearance:none;appearance:none;
+    flex:1;width:auto;min-width:0;height:16px;
+    padding:0;margin:0;border:none;background:transparent;cursor:pointer;
+  }
+  .fmt-opacidad input.op-slider::-webkit-slider-runnable-track{
+    height:3px;border-radius:2px;
+    background:linear-gradient(to right, var(--accent) 0%, var(--accent) var(--relleno,100%), #1b3d4e var(--relleno,100%), #1b3d4e 100%);
+  }
+  .fmt-opacidad input.op-slider::-moz-range-track{height:3px;border-radius:2px;background:#1b3d4e;}
+  .fmt-opacidad input.op-slider::-moz-range-progress{height:3px;border-radius:2px;background:var(--accent);}
+  .fmt-opacidad input.op-slider::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:13px;height:13px;border-radius:50%;margin-top:-5px;
+    background:var(--accent);border:2px solid var(--panel);
+    box-shadow:0 0 0 1px var(--accent);transition:transform .12s;
+  }
+  .fmt-opacidad input.op-slider::-moz-range-thumb{
+    width:13px;height:13px;border-radius:50%;
+    background:var(--accent);border:2px solid var(--panel);box-shadow:0 0 0 1px var(--accent);
+  }
+  .fmt-opacidad input.op-slider:hover::-webkit-slider-thumb{transform:scale(1.15);}
+  .fmt-opacidad input.op-slider:active::-webkit-slider-thumb{transform:scale(1.15);}
   .fmt-inspector .row2 > div{flex:1;}
 
   .tag-chips{display:flex;flex-wrap:wrap;gap:8px;}
@@ -839,7 +906,12 @@
       <div id="adminView-jugadores" class="admin-subview" style="display:none;">
         <h3>Jugadores</h3>
         <p class="sec-desc">El nombre, nacionalidad, fecha de nacimiento y estatura de cada jugador se editan acá — en Base de Datos son solo de lectura.</p>
-        <input type="text" class="admin-search" id="searchJugadorInput" placeholder="Buscar jugador…">
+        <div class="camp-bar" style="margin-bottom:14px;">
+          <input type="text" class="admin-search" id="searchJugadorInput" placeholder="Buscar por nombre…" style="margin:0;flex:1;min-width:200px;">
+          <label class="muted-note">Club <select id="filtroClubJugador"><option value="">todos</option></select></label>
+          <label class="muted-note">Nacionalidad <select id="filtroNacJugador"><option value="">todas</option></select></label>
+          <button class="ghost" id="limpiarFiltrosJug">Limpiar</button>
+        </div>
         <div class="admin-list" id="adminJugadorDirList"></div>
         <div class="empty" id="adminJugadorDirEmpty" style="display:none;">No se encontraron jugadores.</div>
 
@@ -992,33 +1064,67 @@
           <button class="fmt-modo-btn" data-modo="control">Control · en vivo</button>
         </div>
 
-        <!-- barra del modo EDITOR -->
-        <div class="fmt-toolbar" id="fmtToolbarEditor">
-          <button class="ghost" data-add="modulo-formacion">+ Módulo formación</button>
-          <button class="ghost" data-add="texto">+ Texto</button>
-          <button class="ghost" data-add="forma">+ Forma</button>
-          <button class="ghost" id="fmtAddImagenBtn">+ Imagen</button>
-          <input type="file" id="fmtImagenInput" accept="image/*" style="display:none;">
-          <span class="fmt-sep"></span>
-          <label class="muted-note">Lienzo
-            <input type="number" id="fmtCanvasW" value="1920" min="100" step="10" style="width:80px;">×
-            <input type="number" id="fmtCanvasH" value="1080" min="100" step="10" style="width:80px;">
-          </label>
-          <label class="muted-note">Fondo <input type="color" id="fmtCanvasBg" value="#001824"></label>
-          <label class="muted-note"><input type="checkbox" id="fmtCanvasTransp" checked> transparente</label>
-          <span class="fmt-sep"></span>
-          <button class="ghost" id="fmtDeleteElBtn">Eliminar</button>
-          <button class="primary" id="fmtSaveBtn">Guardar diseño</button>
-          <button class="ghost" id="fmtOutputBtn">Link para Flowics</button>
+        <div id="fmtToolbarEditor" class="fmt-barras">
+          <div class="fmt-toolbar fmt-grupo-barra">
+            <span class="fmt-barra-lbl">Elementos</span>
+            <button class="ghost" data-add="proveedor">+ Proveedor</button>
+            <button class="ghost" data-add="grupo">+ Grupo</button>
+            <button class="ghost" data-add="texto">+ Texto</button>
+            <button class="ghost" data-add="forma">+ Forma</button>
+            <button class="ghost" data-add="imagen">+ Imagen</button>
+            <button class="ghost" id="fmtDeleteElBtn">Eliminar</button>
+          </div>
+
+          <div class="fmt-toolbar fmt-grupo-barra">
+            <span class="fmt-barra-lbl">Lienzo</span>
+            <input type="number" id="fmtCanvasW" value="1920" min="100" step="10" style="width:76px;" title="Ancho">
+            <span class="muted-note">×</span>
+            <input type="number" id="fmtCanvasH" value="1080" min="100" step="10" style="width:76px;" title="Alto">
+            <label class="muted-note">Fondo <input type="color" id="fmtCanvasBg" value="#001824"></label>
+            <label class="muted-note"><input type="checkbox" id="fmtCanvasTransp" checked> transparente</label>
+          </div>
+
+          <div class="fmt-toolbar fmt-grupo-barra">
+            <span class="fmt-barra-lbl">Vista</span>
+            <label class="muted-note">Zoom
+              <select id="fmtZoomSel">
+                <option value="auto">Ajustar</option>
+                <option value="0.25">25%</option>
+                <option value="0.5">50%</option>
+                <option value="0.75">75%</option>
+                <option value="1">100%</option>
+                <option value="1.5">150%</option>
+              </select>
+            </label>
+            <label class="muted-note"><input type="checkbox" id="fmtSnapOn"> Cuadrícula</label>
+            <input type="number" id="fmtSnapPaso" value="10" min="1" step="1" style="width:52px;" title="Tamaño de la cuadrícula">
+            <label class="muted-note">Muestra
+              <input type="text" id="fmtRefJugador" list="actingsJugadoresDatalist" placeholder="Jugador…" style="width:130px;">
+            </label>
+          </div>
+
+          <div class="fmt-toolbar fmt-grupo-barra">
+            <span class="fmt-barra-lbl">Historial</span>
+            <button class="ghost fmt-ico-btn" id="fmtUndoBtn" title="Deshacer (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 7H15C17.7614 7 20 9.23857 20 12C20 14.7614 17.7614 17 15 17M4 7L7 4M4 7L7 10M8.00001 17H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="ghost fmt-ico-btn" id="fmtRedoBtn" title="Rehacer (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 7H9C6.23857 7 4 9.23857 3.99999 12C3.99999 14.7614 6.23857 17 8.99999 17M20 7L17 4M20 7L17 10M16 17H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+
+          <div class="fmt-toolbar fmt-grupo-barra">
+            <span class="fmt-barra-lbl">Salida</span>
+            <button class="primary" id="fmtSaveBtn">Guardar diseño</button>
+            <button class="ghost" id="fmtOutputBtn">Link para Flowics</button>
+          </div>
         </div>
 
-        <!-- barra del modo CONTROL -->
         <div class="fmt-toolbar" id="fmtToolbarControl" style="display:none;">
           <label class="muted-note">Campeonato
             <select id="fmtCtrlCamp"><option value="">— elige uno —</option></select>
           </label>
           <label class="muted-note">Equipo
             <select id="fmtCtrlEquipo"><option value="">— elige un equipo —</option></select>
+          </label>
+          <label class="muted-note">Destino
+            <select id="fmtCtrlProveedor"></select>
           </label>
           <span class="fmt-sep"></span>
           <button class="ghost danger" id="fmtCtrlLimpiarBtn">Limpiar formación</button>
@@ -1028,10 +1134,11 @@
         </div>
 
         <div class="fmt-workspace">
-          <aside class="fmt-panel-izq" id="fmtPanelIzq"></aside>
-          <div class="fmt-canvas-wrap">
-            <div id="fmtCanvas"></div>
+          <div class="fmt-col-izq">
+            <aside class="fmt-panel-izq" id="fmtPanelIzq"></aside>
+            <div id="fmtTextosCtrl"></div>
           </div>
+          <div class="fmt-canvas-wrap"><div id="fmtCanvasHolder"><div id="fmtCanvas"></div></div></div>
           <aside class="fmt-inspector" id="fmtInspector">
             <p class="muted-note">Selecciona un elemento para editar sus propiedades.</p>
           </aside>
@@ -1176,20 +1283,19 @@ function normalizeName(name){
 // palabra suelta en cualquier posición ("chile") o una frase completa ("universidad de ch"),
 // donde solo la última palabra escrita puede quedar a medio tipear. Se usa en todos los
 // buscadores (jugadores, actings) para no duplicar la lógica.
+// Para buscar se quitan los acentos de forma general (incluye los que vienen del PDF
+// como letra + tilde por separado, que la normalización simple no alcanzaba a limpiar).
+function normalizarBusqueda(texto){
+  return String(texto||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toUpperCase().trim().replace(/\s+/g,' ');
+}
 function empiezaConFrase(texto, query){
-  const words = normalizeName(texto).split(' ').filter(Boolean);
-  const qWords = query.split(' ').filter(Boolean);
+  const words = normalizarBusqueda(texto).split(' ').filter(Boolean);
+  const qWords = String(query||'').split(' ').filter(Boolean);
   if(qWords.length === 0) return false;
-  for(let start = 0; start <= words.length - qWords.length; start++){
-    let ok = true;
-    for(let i = 0; i < qWords.length; i++){
-      const esUltima = i === qWords.length - 1;
-      const w = words[start + i];
-      if(esUltima ? !w.startsWith(qWords[i]) : w !== qWords[i]){ ok = false; break; }
-    }
-    if(ok) return true;
-  }
-  return false;
+  // cada palabra escrita debe calzar con el comienzo de alguna palabra del nombre,
+  // en cualquier orden: "mendez", "victor mendez" y "mendez victor" encuentran lo mismo
+  return qWords.every(q => words.some(w => w.startsWith(q)));
 }
 
 async function ensureCampeonatoByName(name){
@@ -1225,8 +1331,18 @@ async function ensureClubId(rawLabel){
   return inserted.id;
 }
 async function ensureEquipoId(campId, teamName, clubId){
+  // primero por club: es la identidad real. Buscar por nombre creaba equipos duplicados
+  // cuando el mismo club estaba guardado con el nombre limpio y con el del dossier.
+  if(clubId){
+    const { data: porClub } = await sb.from('equipos').select('id')
+      .eq('campeonato_id', campId).eq('club_id', clubId).maybeSingle();
+    if(porClub) return porClub.id;
+  }
   let { data } = await sb.from('equipos').select('id').eq('campeonato_id', campId).eq('nombre', teamName).maybeSingle();
-  if(data) return data.id;
+  if(data){
+    if(clubId) await sb.from('equipos').update({ club_id: clubId }).eq('id', data.id);
+    return data.id;
+  }
   const { data: inserted, error } = await sb.from('equipos').insert({campeonato_id: campId, nombre: teamName, club_id: clubId}).select('id').single();
   if(error){
     const { data: retry } = await sb.from('equipos').select('id').eq('campeonato_id', campId).eq('nombre', teamName).maybeSingle();
@@ -1506,8 +1622,7 @@ document.getElementById('dbImportInput').addEventListener('change', async (e) =>
     const camps = imported.campeonatos;
     if(!camps) throw new Error('formato inválido');
     const campArray = Array.isArray(camps) ? camps : Object.entries(camps).map(([nombre, v]) => ({ nombre, equipos: Object.entries(v.equipos||{}).map(([n2,eq]) => ({nombre:n2, plantel_jugadores: eq.jugadores})) }));
-    const { data: maestroData } = await sb.from('jugadores_maestro').select('*').limit(50000);
-    const maestroCache = maestroData || [];
+    const maestroCache = await traerTodo('jugadores_maestro', '*');
     for(const c of campArray){
       const campId = await ensureCampeonatoByName(c.nombre);
       if(!campId) continue;
@@ -1563,8 +1678,7 @@ async function processPdf(file){
   // caché compartido de jugadores maestro para todo el PDF, para no re-consultar por cada equipo.
   // OJO: el límite explícito es obligatorio — sin él Supabase corta en 1000 filas y el caché
   // queda incompleto, lo que hace que se creen jugadores maestro duplicados.
-  const { data: maestroData } = await sb.from('jugadores_maestro').select('*').limit(50000);
-  const maestroCache = maestroData || [];
+  const maestroCache = await traerTodo('jugadores_maestro', '*');
   for(let p = 1; p <= doc.numPages; p++){
     const page = await doc.getPage(p);
     const content = await page.getTextContent();
@@ -1615,18 +1729,26 @@ document.getElementById('sectionNav').addEventListener('click', (e) => {
 async function renderInicio(){
   const { data, error } = await sb
     .from('campeonatos')
-    .select('id,nombre,equipos(id,nombre,actualizado,plantel_jugadores(id))')
+    .select('id,nombre,equipos(id,nombre,club_id,actualizado,plantel_jugadores(id,jugador_id))')
     .order('nombre');
   if(error){ console.error(error); return; }
   const camps = data || [];
 
   // ---- KPIs ----
-  const totalEquipos = camps.reduce((sum,c) => sum + c.equipos.length, 0);
-  const totalJugadores = camps.reduce((sum,c) => sum + c.equipos.reduce((s2,e) => s2 + e.plantel_jugadores.length, 0), 0);
+  // un club puede participar en varios campeonatos: se cuenta una sola vez
+  const clubesUnicos = new Set();
+  camps.forEach(c => c.equipos.forEach(e => clubesUnicos.add(e.club_id || e.nombre)));
+  const totalEquipos = clubesUnicos.size;
+  // un jugador puede estar en varios campeonatos: se cuenta una sola vez
+  const jugadoresUnicos = new Set();
+  camps.forEach(c => c.equipos.forEach(e => e.plantel_jugadores.forEach(p => {
+    if(p.jugador_id) jugadoresUnicos.add(p.jugador_id);
+  })));
+  const totalJugadores = jugadoresUnicos.size;
   const kpiGrid = document.getElementById('kpiGrid');
   kpiGrid.innerHTML = `
     <div class="kpi-card"><div class="kpi-num"><span>${camps.length}</span></div><div class="kpi-label">Campeonatos</div></div>
-    <div class="kpi-card"><div class="kpi-num"><span>${totalEquipos}</span></div><div class="kpi-label">Equipos</div></div>
+    <div class="kpi-card"><div class="kpi-num"><span>${totalEquipos}</span></div><div class="kpi-label">Clubes</div></div>
     <div class="kpi-card"><div class="kpi-num"><span>${totalJugadores}</span></div><div class="kpi-label">Jugadores</div></div>
   `;
 
@@ -1941,17 +2063,15 @@ function csvCell(v, delim){
 let allClubes = [];
 
 async function loadClubes(){
-  const { data, error } = await sb.from('clubes').select('id,nombre,abreviatura,escudo_url').order('nombre').limit(5000);
-  if(error){ console.error(error); return; }
-  allClubes = data || [];
+  allClubes = await traerTodo('clubes', 'id,nombre,abreviatura,escudo_url', 'nombre');
 }
 
 // ---- Clubes: lista clickeable ----
 function renderAdminClubes(){
   const list = document.getElementById('adminClubList');
   const empty = document.getElementById('adminClubEmpty');
-  const q = normalizeName(document.getElementById('searchClubInput').value || '');
-  const filtrados = q ? allClubes.filter(c => normalizeName(c.nombre).includes(q)) : allClubes;
+  const q = normalizarBusqueda(document.getElementById('searchClubInput').value || '');
+  const filtrados = q ? allClubes.filter(c => normalizarBusqueda(c.nombre).includes(q)) : allClubes;
   empty.style.display = filtrados.length === 0 ? 'block' : 'none';
   list.innerHTML = '';
   filtrados.forEach(club => {
@@ -2072,7 +2192,7 @@ async function renderClubDetail(){
         if(!confirm(`¿Quitar a "${club.nombre}" de "${camp.nombre}"? Esto borra su plantel en ese campeonato. No se puede deshacer.`)) return;
         await sb.from('equipos').delete().eq('id', part.id);
       } else {
-        await sb.from('equipos').insert({ campeonato_id: camp.id, club_id: club.id, nombre: club.nombre });
+        await ensureEquipoId(camp.id, club.nombre, club.id);
       }
       if(campActivoId === camp.id) await refreshCampData();
       renderClubDetail();
@@ -2125,9 +2245,9 @@ async function copyPlantel(clubId, fromCampId, toCampId){
   if(!origenRows || origenRows.length === 0){ alert('El plantel de origen está vacío.'); return; }
 
   if(!toEq){
-    const { data: inserted, error } = await sb.from('equipos').insert({ campeonato_id: toCampId, club_id: clubId, nombre: club.nombre }).select('id').single();
-    if(error){ alert('Error creando la participación destino: ' + error.message); return; }
-    toEq = { id: inserted.id };
+    const nuevoId = await ensureEquipoId(toCampId, club.nombre, clubId);
+    if(!nuevoId){ alert('No se pudo crear la participación en el campeonato destino.'); return; }
+    toEq = { id: nuevoId };
   }
 
   const { data: destinoExistente } = await sb.from('plantel_jugadores').select('jugador_id').eq('equipo_id', toEq.id);
@@ -2218,17 +2338,15 @@ let allJugadoresMaestro = [];
 // Prioriza la de local; si no hay, usa la de visita.
 let mediosCuerpoPorJugador = {};
 async function loadMediosCuerpo(){
-  const { data, error } = await sb.from('jugador_fotos')
-    .select('jugador_id,kit,url')
-    .eq('tipo','MEDIO_CUERPO')
-    .limit(50000);
-  if(error){ console.error(error); return; }
-  const map = {};
+  mediosCuerpoPorJugador = {};
+  const data = await traerTodo('jugador_fotos', 'jugador_id,kit,tipo,url');
+  // preferencia: medio cuerpo local > medio cuerpo visita > cualquier otra foto
+  const rango = f => (f.tipo === 'MEDIO_CUERPO' ? 0 : 2) + (f.kit === 'LOCAL' ? 0 : 1);
+  const mejor = {};
   (data || []).forEach(f => {
-    if(!f.url) return;
-    if(f.kit === 'LOCAL' || !map[f.jugador_id]) map[f.jugador_id] = f.url;
+    const r = rango(f);
+    if(mejor[f.jugador_id] == null || r < mejor[f.jugador_id]){ mejor[f.jugador_id] = r; mediosCuerpoPorJugador[f.jugador_id] = f.url; }
   });
-  mediosCuerpoPorJugador = map;
 }
 function avatarHtml(jugador, cls, phCls){
   const url = mediosCuerpoPorJugador[jugador.id];
@@ -2237,28 +2355,42 @@ function avatarHtml(jugador, cls, phCls){
     : `<span class="${phCls}">${initials(jugador.nombre_tv)}</span>`;
 }
 
+// Supabase corta cada consulta en 1000 filas (tope del servidor, no del código).
+// Para tablas grandes hay que pedirlas por páginas o los datos llegan incompletos.
+async function traerTodo(tabla, columnas, ordenar){
+  const PAGINA = 1000;
+  let desde = 0, todo = [];
+  for(;;){
+    let q = sb.from(tabla).select(columnas);
+    if(ordenar) q = q.order(ordenar);
+    const { data, error } = await q.range(desde, desde + PAGINA - 1);
+    if(error){ console.error(error); break; }
+    todo = todo.concat(data || []);
+    if(!data || data.length < PAGINA) break;
+    desde += PAGINA;
+  }
+  return todo;
+}
+
 async function loadJugadoresMaestro(){
-  const { data, error } = await sb.from('jugadores_maestro').select('id,nombre_tv,nombre_id,nacionalidad,nacimiento,est,club_id').order('nombre_tv').limit(5000);
-  if(error){ console.error(error); return; }
-  allJugadoresMaestro = data || [];
+  allJugadoresMaestro = await traerTodo('jugadores_maestro', 'id,nombre_tv,nombre_id,nacionalidad,nacimiento,est,club_id', 'nombre_tv');
 }
 function renderAdminJugadorDir(){
   const list = document.getElementById('adminJugadorDirList');
   const empty = document.getElementById('adminJugadorDirEmpty');
-  const q = normalizeName(document.getElementById('searchJugadorInput').value || '');
+  const q = normalizarBusqueda(document.getElementById('searchJugadorInput').value || '');
+  const fClub = document.getElementById('filtroClubJugador').value;
+  const fNac = document.getElementById('filtroNacJugador').value;
   const clubById = {};
   allClubes.forEach(c => clubById[c.id] = c);
 
-  const filtrados = q ? allJugadoresMaestro.filter(j => {
-    if(empiezaConFrase(j.nombre_tv, q)) return true;
-    if(j.nacionalidad && normalizeName(j.nacionalidad).startsWith(q)) return true;
-    const club = j.club_id ? clubById[j.club_id] : null;
-    if(club){
-      if(empiezaConFrase(club.nombre, q)) return true;
-      if(club.abreviatura && normalizeName(club.abreviatura) === q) return true;
-    }
-    return false;
-  }).slice(0, 150) : allJugadoresMaestro.slice(0, 60);
+  // el texto busca solo por nombre; club y nacionalidad se eligen aparte
+  let base = allJugadoresMaestro;
+  if(fClub) base = base.filter(j => j.club_id === fClub);
+  if(fNac) base = base.filter(j => normalizarBusqueda(j.nacionalidad||'') === fNac);
+  const filtrados = q
+    ? base.filter(j => empiezaConFrase(j.nombre_tv, q)).slice(0, 300)
+    : base.slice(0, fClub || fNac ? 300 : 60);
   empty.style.display = filtrados.length === 0 ? 'block' : 'none';
   list.innerHTML = '';
   filtrados.forEach(j => {
@@ -2295,6 +2427,28 @@ function renderAdminJugadorDir(){
   });
 }
 document.getElementById('searchJugadorInput').addEventListener('input', renderAdminJugadorDir);
+document.getElementById('filtroClubJugador').addEventListener('change', renderAdminJugadorDir);
+document.getElementById('filtroNacJugador').addEventListener('change', renderAdminJugadorDir);
+document.getElementById('limpiarFiltrosJug').addEventListener('click', () => {
+  document.getElementById('searchJugadorInput').value = '';
+  document.getElementById('filtroClubJugador').value = '';
+  document.getElementById('filtroNacJugador').value = '';
+  renderAdminJugadorDir();
+});
+function fmtLlenarFiltrosJugador(){
+  const selClub = document.getElementById('filtroClubJugador');
+  const previoC = selClub.value;
+  selClub.innerHTML = '<option value="">todos</option>' +
+    allClubes.map(c => `<option value="${c.id}">${escapeHtml(c.nombre)}</option>`).join('');
+  selClub.value = previoC;
+
+  const selNac = document.getElementById('filtroNacJugador');
+  const previoN = selNac.value;
+  const nacs = [...new Set(allJugadoresMaestro.map(j => normalizarBusqueda(j.nacionalidad||'')).filter(Boolean))].sort();
+  selNac.innerHTML = '<option value="">todas</option>' +
+    nacs.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  selNac.value = previoN;
+}
 
 // ---- router de tarjetas de Administración ----
 let adminSubView = 'menu';
@@ -2306,7 +2460,7 @@ async function showAdminSub(sub){
   document.getElementById('adminView-' + sub).style.display = 'block';
   if(sub === 'campeonatos') renderAdminCampList();
   if(sub === 'clubes'){ await loadClubes(); closeClubDetail(); }
-  if(sub === 'jugadores'){ await loadClubes(); await loadJugadoresMaestro(); await loadMediosCuerpo(); renderAdminJugadorDir(); renderAdminReview(); }
+  if(sub === 'jugadores'){ await loadClubes(); await loadJugadoresMaestro(); await loadMediosCuerpo(); fmtLlenarFiltrosJugador(); renderAdminJugadorDir(); renderAdminReview(); }
 }
 function showAdminMenu(){
   adminSubView = 'menu';
@@ -2509,7 +2663,7 @@ document.getElementById('actingsConfirmBtn').addEventListener('click', async () 
 let actingsGridRenderId = 0;
 async function renderActingsGrid(){
   const miRenderId = ++actingsGridRenderId;
-  const q = normalizeName(document.getElementById('actingsSearchInput').value || '');
+  const q = normalizarBusqueda(document.getElementById('actingsSearchInput').value || '');
   const orden = document.getElementById('actingsSortSelect').value;
   const clubById = {};
   allClubes.forEach(c => clubById[c.id] = c);
@@ -2816,22 +2970,14 @@ async function renderFlowicsDetail(){
   }
 }
 
-// ================== EDITOR DE FORMACIONES (tipo: formacion) ==================
-// Dos modos sobre el mismo lienzo:
-//   EDITOR  -> define el DISEÑO: qué elementos hay y cómo se ve cada jugador (plantilla)
-//   CONTROL -> opera EN VIVO: elige equipo, agrega jugadores a la cancha y los arrastra
-// El diseño y la formación se guardan juntos en config del control, pero son independientes:
-// "Limpiar formación" borra los jugadores puestos sin tocar el diseño.
-let fmtDoc = null;
-let fmtSelId = null;
-let fmtSelSub = null;   // pieza interna de la tarjeta seleccionada (foto/nombre/dorsal)
-let fmtZoom = 1;
-let fmtModo = 'editor';
-let fmtCtrlJugadores = [];   // plantel del equipo elegido en modo control
-
-// ---- selector de color propio: transparencia integrada + gradiente simple ----
-// El picker nativo del navegador no admite canal alfa ni gradientes, por eso se construye acá.
-// Cada propiedad de color usa tres campos: <prop> (hex), <prop>Alpha (0-1) y <prop>Grad ({activo,color,alpha,angulo}).
+// ================== EDITOR DE GRÁFICAS (tipo: formacion) ==================
+// ---- utilidades de color, imagen y texto ----
+function fmtRgba(hex, alpha){
+  if(alpha == null) alpha = 1;
+  const h = String(hex || '#000000').replace('#','');
+  const n = parseInt(h.length === 3 ? h.split('').map(x=>x+x).join('') : h, 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${alpha})`;
+}
 function fmtHexARgb(hex){
   const h = String(hex||'#000000').replace('#','');
   const n = parseInt(h.length === 3 ? h.split('').map(x=>x+x).join('') : h, 16);
@@ -2842,24 +2988,21 @@ function fmtRgbAHex(r,g,b){
 }
 function fmtRgbAHsv(r,g,b){
   r/=255; g/=255; b/=255;
-  const max = Math.max(r,g,b), min = Math.min(r,g,b), d = max-min;
-  let h = 0;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  let h=0;
   if(d){
-    if(max===r) h = ((g-b)/d) % 6;
-    else if(max===g) h = (b-r)/d + 2;
-    else h = (r-g)/d + 4;
-    h *= 60; if(h<0) h += 360;
+    if(max===r) h=((g-b)/d)%6; else if(max===g) h=(b-r)/d+2; else h=(r-g)/d+4;
+    h*=60; if(h<0) h+=360;
   }
-  return { h, s: max ? d/max : 0, v: max };
+  return { h, s: max?d/max:0, v:max };
 }
 function fmtHsvAHex(h,s,v){
-  const c = v*s, x = c*(1-Math.abs(((h/60)%2)-1)), m = v-c;
+  const c=v*s, x=c*(1-Math.abs(((h/60)%2)-1)), m=v-c;
   let rgb;
   if(h<60) rgb=[c,x,0]; else if(h<120) rgb=[x,c,0]; else if(h<180) rgb=[0,c,x];
   else if(h<240) rgb=[0,x,c]; else if(h<300) rgb=[x,0,c]; else rgb=[c,0,x];
-  return fmtRgbAHex((rgb[0]+m)*255, (rgb[1]+m)*255, (rgb[2]+m)*255);
+  return fmtRgbAHex((rgb[0]+m)*255,(rgb[1]+m)*255,(rgb[2]+m)*255);
 }
-// devuelve el CSS final de una propiedad: color plano o gradiente
 function fmtPaintCss(el, prop){
   const g = el[prop+'Grad'];
   const base = fmtRgba(el[prop]||'#000000', el[prop+'Alpha']);
@@ -2867,20 +3010,59 @@ function fmtPaintCss(el, prop){
   return base;
 }
 function fmtEsGrad(el, prop){ const g = el[prop+'Grad']; return !!(g && g.activo); }
-// estilo para pintar TEXTO (con gradiente se recorta el degradado sobre las letras)
 function fmtEstiloTexto(el, prop){
-  if(fmtEsGrad(el, prop)){
+  if(fmtEsGrad(el, prop))
     return `background-image:${fmtPaintCss(el,prop)};-webkit-background-clip:text;background-clip:text;color:transparent;`;
-  }
   return `color:${fmtRgba(el[prop]||'#ffffff', el[prop+'Alpha'])};`;
 }
+function fmtEstiloImagen(el){
+  let s = `object-fit:${el.imgFit||'cover'};object-position:${el.imgPosX==null?50:el.imgPosX}% ${el.imgPosY==null?0:el.imgPosY}%;`;
+  if(el.imgZoom && el.imgZoom !== 100) s += `transform:scale(${el.imgZoom/100});`;
+  if(el.imgRadio) s += `border-radius:${el.imgRadio}px;`;
+  if(el.imgBordeAncho) s += `border:${el.imgBordeAncho}px solid ${fmtRgba(el.imgBordeColor||'#ffffff', el.imgBordeColorAlpha)};box-sizing:border-box;`;
+  if(el.imgSombra) s += `filter:drop-shadow(${el.sombraX==null?0:el.sombraX}px ${el.sombraY==null?4:el.sombraY}px ${el.sombraBlur==null?8:el.sombraBlur}px ${fmtRgba(el.sombraColor||'#000000', el.sombraColorAlpha==null?0.5:el.sombraColorAlpha)});`;
+  if(el.imgMascara === 'circulo') s += 'clip-path:circle(50% at 50% 50%);';
+  if(el.imgMascara === 'fade'){
+    const corte = el.mascaraCorte==null?60:el.mascaraCorte;
+    const fin = el.mascaraFin==null?100:el.mascaraFin;
+    const grad = `linear-gradient(to bottom,#000 ${corte}%,transparent ${fin}%)`;
+    s += `-webkit-mask-image:${grad};mask-image:${grad};`;
+  }
+  return s;
+}
+function fmtNombreSegunFormato(nombreCompleto, formato){
+  const partes = String(nombreCompleto||'').trim().split(/\s+/).filter(Boolean);
+  if(partes.length === 0) return '';
+  if(formato === 'apellido') return partes.slice(1).join(' ') || partes[0];
+  if(formato === 'inicial-apellido'){
+    const apellido = partes.slice(1).join(' ') || partes[0];
+    return partes.length > 1 ? `${partes[0][0]}. ${apellido}` : apellido;
+  }
+  return nombreCompleto;
+}
 
+// ---- selector de color propio (transparencia + gradiente) ----
 let fmtPickerPanel = null;
 function fmtCerrarPicker(){ if(fmtPickerPanel){ fmtPickerPanel.remove(); fmtPickerPanel = null; } }
-document.addEventListener('mousedown', (e) => {
+document.addEventListener('mousedown', e => {
   if(fmtPickerPanel && !e.target.closest('.fmt-picker') && !e.target.closest('.fmt-swatch')) fmtCerrarPicker();
 });
-
+function fmtColorAlphaHtml(labelTxt, propColor, propAlpha, valColor, valAlpha){
+  return `<label>${labelTxt}</label><div class="fmt-swatch" data-swatch="${propColor}"><span class="fmt-swatch-color"></span><span class="fmt-swatch-txt"></span></div>`;
+}
+function fmtEngancharSwatches(box, el, onChange){
+  box.querySelectorAll('[data-swatch]').forEach(sw => {
+    const prop = sw.dataset.swatch;
+    const pintar = () => {
+      sw.querySelector('.fmt-swatch-color').style.background = fmtPaintCss(el, prop);
+      sw.querySelector('.fmt-swatch-txt').textContent = fmtEsGrad(el, prop)
+        ? 'gradiente'
+        : `${el[prop]||'#000000'} · ${Math.round((el[prop+'Alpha'] == null ? 1 : el[prop+'Alpha'])*100)}%`;
+    };
+    pintar();
+    sw.addEventListener('click', () => fmtAbrirPicker(sw, el, prop, () => { pintar(); onChange(); }));
+  });
+}
 function fmtAbrirPicker(swatch, el, prop, onChange){
   fmtCerrarPicker();
   if(!el[prop+'Grad']) el[prop+'Grad'] = { activo:false, color:'#000000', alpha:1, angulo:90 };
@@ -2890,9 +3072,8 @@ function fmtAbrirPicker(swatch, el, prop, onChange){
   fmtPickerPanel = panel;
   document.body.appendChild(panel);
 
-  let parada = 1;              // 1 = color base, 2 = segundo color del gradiente
-  let hsv = { h:0, s:1, v:1 }; // se mantiene aparte para no perder el tono al bajar a negro
-
+  let parada = 1;
+  let hsv = { h:0, s:1, v:1 };
   const leer = () => parada === 1
     ? { hex: el[prop]||'#000000', alpha: el[prop+'Alpha'] == null ? 1 : el[prop+'Alpha'] }
     : { hex: g.color||'#000000', alpha: g.alpha == null ? 1 : g.alpha };
@@ -2900,15 +3081,12 @@ function fmtAbrirPicker(swatch, el, prop, onChange){
     if(parada === 1){ el[prop] = hex; el[prop+'Alpha'] = alpha; }
     else { g.color = hex; g.alpha = alpha; }
   };
-  const sincronizarHsvDesdeValor = () => {
+  const sincronizar = () => {
     const { r, g:gg, b } = fmtHexARgb(leer().hex);
     const nuevo = fmtRgbAHsv(r, gg, b);
     hsv = { h: nuevo.s === 0 ? hsv.h : nuevo.h, s: nuevo.s, v: nuevo.v };
   };
 
-  // La estructura se arma UNA vez (o cuando cambia el gradiente). Mover el color
-  // solo actualiza estilos y posiciones: si se recreara el HTML, el elemento que se
-  // está arrastrando desaparecería y el puntero saltaría al inicio.
   function construir(){
     panel.innerHTML = `
       <div class="fmt-sv"><div class="fmt-sv-punto"></div></div>
@@ -2931,18 +3109,15 @@ function fmtAbrirPicker(swatch, el, prop, onChange){
         </div>
         <div class="fmt-grad-preview"></div>` : ''}
     `;
-    enganchar();
-    actualizar();
+    enganchar(); actualizar();
   }
-
   function actualizar(){
     const { hex, alpha } = leer();
     const hueHex = fmtHsvAHex(hsv.h, 1, 1);
-    const sv = panel.querySelector('.fmt-sv');
-    sv.style.background = `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,${hueHex})`;
+    panel.querySelector('.fmt-sv').style.background =
+      `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,${hueHex})`;
     const p = panel.querySelector('.fmt-sv-punto');
-    p.style.left = (hsv.s*100) + '%';
-    p.style.top = ((1-hsv.v)*100) + '%';
+    p.style.left = (hsv.s*100) + '%'; p.style.top = ((1-hsv.v)*100) + '%';
     panel.querySelector('.fmt-hue .fmt-bar-punto').style.left = ((hsv.h/360)*100) + '%';
     panel.querySelector('.fmt-alpha-relleno').style.background = `linear-gradient(to right, transparent, ${fmtRgba(hex,1)})`;
     panel.querySelector('.fmt-alpha .fmt-bar-punto').style.left = (alpha*100) + '%';
@@ -2952,51 +3127,42 @@ function fmtAbrirPicker(swatch, el, prop, onChange){
     const prev = panel.querySelector('.fmt-grad-preview');
     if(prev) prev.style.background = fmtPaintCss(el, prop);
   }
-
-  function aplicar(hex, alpha){ guardar(hex, alpha); actualizar(); onChange(); }
+  const aplicar = (hex, alpha) => { guardar(hex, alpha); actualizar(); onChange(); };
 
   function enganchar(){
-    const sv = panel.querySelector('.fmt-sv');
-    const hue = panel.querySelector('.fmt-hue');
-    const alp = panel.querySelector('.fmt-alpha');
-
+    const sv = panel.querySelector('.fmt-sv'), hue = panel.querySelector('.fmt-hue'), alp = panel.querySelector('.fmt-alpha');
     const arrastrar = (elemento, cb) => {
-      const mover = (ev) => {
+      const mover = ev => {
         const rect = elemento.getBoundingClientRect();
-        const px = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
-        const py = Math.max(0, Math.min(1, (ev.clientY - rect.top) / rect.height));
-        cb(px, py);
+        cb(Math.max(0,Math.min(1,(ev.clientX-rect.left)/rect.width)),
+           Math.max(0,Math.min(1,(ev.clientY-rect.top)/rect.height)));
       };
-      elemento.addEventListener('mousedown', (ev) => {
-        ev.preventDefault(); ev.stopPropagation();
-        mover(ev);
+      elemento.addEventListener('mousedown', ev => {
+        ev.preventDefault(); ev.stopPropagation(); mover(ev);
         const mm = e2 => { e2.preventDefault(); mover(e2); };
         const mu = () => { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); };
         window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu);
       });
     };
-    arrastrar(sv, (px, py) => { hsv.s = px; hsv.v = 1-py; aplicar(fmtHsvAHex(hsv.h, hsv.s, hsv.v), leer().alpha); });
-    arrastrar(hue, (px) => { hsv.h = px*360; aplicar(fmtHsvAHex(hsv.h, hsv.s, hsv.v), leer().alpha); });
-    arrastrar(alp, (px) => aplicar(leer().hex, Math.round(px*100)/100));
+    arrastrar(sv, (px,py) => { hsv.s=px; hsv.v=1-py; aplicar(fmtHsvAHex(hsv.h,hsv.s,hsv.v), leer().alpha); });
+    arrastrar(hue, px => { hsv.h=px*360; aplicar(fmtHsvAHex(hsv.h,hsv.s,hsv.v), leer().alpha); });
+    arrastrar(alp, px => aplicar(leer().hex, Math.round(px*100)/100));
 
     const hexInput = panel.querySelector('.fmt-hex');
     hexInput.addEventListener('mousedown', e => e.stopPropagation());
     hexInput.addEventListener('change', () => {
       let v = hexInput.value.trim();
       if(!v.startsWith('#')) v = '#' + v;
-      if(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)){ guardar(v, leer().alpha); sincronizarHsvDesdeValor(); actualizar(); onChange(); }
+      if(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)){ guardar(v, leer().alpha); sincronizar(); actualizar(); onChange(); }
       else actualizar();
     });
-
-    panel.querySelector('.fmt-grad-on').addEventListener('change', (ev) => {
-      g.activo = ev.target.checked;
-      if(!g.activo) parada = 1;
-      construir(); onChange();
+    panel.querySelector('.fmt-grad-on').addEventListener('change', ev => {
+      g.activo = ev.target.checked; if(!g.activo) parada = 1; construir(); onChange();
     });
     panel.querySelectorAll('.fmt-parada').forEach(b => b.addEventListener('click', () => {
       parada = parseInt(b.dataset.parada);
       panel.querySelectorAll('.fmt-parada').forEach(x => x.classList.toggle('activa', x === b));
-      sincronizarHsvDesdeValor(); actualizar();
+      sincronizar(); actualizar();
     }));
     const ang = panel.querySelector('.fmt-grad-ang');
     if(ang){
@@ -3010,70 +3176,182 @@ function fmtAbrirPicker(swatch, el, prop, onChange){
       });
     }
   }
-
   const r = swatch.getBoundingClientRect();
   panel.style.left = Math.min(window.innerWidth - 240, r.left) + 'px';
   panel.style.top = (r.bottom + window.scrollY + 6) + 'px';
-  sincronizarHsvDesdeValor();
-  construir();
+  sincronizar(); construir();
 }
 
-// swatch que abre el selector (reemplaza al input de color nativo)
-function fmtColorAlphaHtml(labelTxt, propColor, propAlpha, valColor, valAlpha){
-  return `<label>${labelTxt}</label><div class="fmt-swatch" data-swatch="${propColor}"><span class="fmt-swatch-color"></span><span class="fmt-swatch-txt"></span></div>`;
-}
-// conecta todos los swatches del inspector con el selector
-function fmtEngancharSwatches(box, el, onChange){
-  box.querySelectorAll('[data-swatch]').forEach(sw => {
-    const prop = sw.dataset.swatch;
-    const pintar = () => {
-      sw.querySelector('.fmt-swatch-color').style.background = fmtPaintCss(el, prop);
-      sw.querySelector('.fmt-swatch-txt').textContent = fmtEsGrad(el, prop)
-        ? 'gradiente'
-        : `${el[prop]||'#000000'} · ${Math.round((el[prop+'Alpha'] == null ? 1 : el[prop+'Alpha'])*100)}%`;
-    };
-    pintar();
-    sw.addEventListener('click', () => fmtAbrirPicker(sw, el, prop, () => { pintar(); onChange(); }));
-  });
-}
+// Modelo: el diseño es una lista de elementos (texto, forma, imagen, grupo).
+// Un GRUPO agrupa elementos; si además se conecta a un proveedor de datos, se
+// repite una vez por cada fila del proveedor (en este caso, por cada jugador
+// puesto en cancha desde el modo Control).
+// Cualquier texto o imagen puede conectarse a un CAMPO del proveedor.
+let fmtDoc = null;
+let fmtSelId = null;
+let fmtZoom = 1;
+let fmtModo = 'editor';
+let fmtCtrlJugadores = [];
+
+const CAMPOS_TEXTO = [
+  { key:'', label:'Texto fijo' },
+  { key:'nombre', label:'Nombre del jugador' },
+  { key:'dorsal', label:'Dorsal' },
+  { key:'nacionalidad', label:'Nacionalidad' },
+  { key:'club', label:'Nombre del club' },
+];
+const CAMPOS_IMAGEN = [
+  { key:'', label:'Imagen fija' },
+  { key:'foto', label:'Foto del jugador' },
+  { key:'escudo', label:'Escudo del club' },
+];
 
 function fmtDocPorDefecto(){
-  return { canvas:{ w:1920, h:1080, bg:'#001824', bgAlpha:1, transparente:true }, elementos:[], formacion:{ campId:null, equipoId:null, puestos:[] } };
+  return { canvas:{ w:1920, h:1080, bg:'#001824', bgAlpha:1, transparente:true },
+           elementos:[], formacion:{ campId:null, equipoId:null, puestos:[] }, filas:{} };
+}
+// Las filas de cada proveedor: filas[idProveedor] = [ {id, jugadorId, nombre, dorsal, x, y} ]
+function fmtFilas(provId){
+  if(!fmtDoc.filas) fmtDoc.filas = {};
+  if(!fmtDoc.filas[provId]) fmtDoc.filas[provId] = [];
+  return fmtDoc.filas[provId];
+}
+function fmtProveedores(){
+  const res = [];
+  fmtRecorrer(fmtDoc.elementos, el => { if(el.tipo === 'proveedor') res.push(el); });
+  return res;
+}
+function fmtProveedorDe(grupo){
+  return grupo.proveedorId ? fmtProveedores().find(p => p.id === grupo.proveedorId) : null;
+}
+// ¿este elemento vive dentro de un grupo conectado a un proveedor?
+function fmtDentroDeGrupoConectado(id){
+  let dentro = false;
+  const buscar = (lista, conectado) => {
+    lista.forEach(el => {
+      if(el.id === id && conectado) dentro = true;
+      if(el.tipo === 'grupo' && el.hijos) buscar(el.hijos, conectado || !!el.proveedorId);
+    });
+  };
+  buscar(fmtDoc.elementos, false);
+  return dentro;
 }
 function fmtNuevoId(){ return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
-function fmtModulo(){ return fmtDoc.elementos.find(e => e.tipo === 'modulo-formacion'); }
 
-// color hex + alfa (0 a 1) -> rgba() para poder usar transparencias
-function fmtRgba(hex, alpha){
-  if(alpha == null) alpha = 1;
-  const h = String(hex || '#000000').replace('#','');
-  const n = parseInt(h.length === 3 ? h.split('').map(x=>x+x).join('') : h, 16);
-  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${alpha})`;
+// ---- recorrido del árbol de elementos ----
+function fmtRecorrer(lista, fn, padre){
+  lista.forEach(el => { fn(el, lista, padre); if(el.tipo === 'grupo' && el.hijos) fmtRecorrer(el.hijos, fn, el); });
 }
-// nombre del jugador según el formato elegido en el módulo
-function fmtNombreSegunFormato(nombreCompleto, formato){
-  const partes = String(nombreCompleto||'').trim().split(/\s+/).filter(Boolean);
-  if(partes.length === 0) return '';
-  if(formato === 'apellido') return partes.slice(1).join(' ') || partes[0];
-  if(formato === 'inicial-apellido'){
-    const apellido = partes.slice(1).join(' ') || partes[0];
-    return partes.length > 1 ? `${partes[0][0]}. ${apellido}` : apellido;
+function fmtBuscar(id){
+  let res = null;
+  fmtRecorrer(fmtDoc.elementos, (el, lista, padre) => { if(el.id === id) res = { el, lista, padre }; });
+  return res;
+}
+
+// ---- datos que alimentan a los elementos conectados ----
+function fmtNombreRefActual(){
+  const j = fmtDoc.refJugadorId ? allJugadoresMaestro.find(x => x.id === fmtDoc.refJugadorId) : null;
+  return j ? j.nombre_tv : '';
+}
+function fmtDatosDeMuestra(){
+  const j = fmtDoc.refJugadorId ? allJugadoresMaestro.find(x => x.id === fmtDoc.refJugadorId) : null;
+  return { nombre: j ? j.nombre_tv : 'Nombre Apellido', dorsal:'10',
+           nacionalidad: j ? (j.nacionalidad||'') : 'CHILENO',
+           club: fmtNombreClubActivo(), jugadorId: j ? j.id : null };
+}
+function fmtNombreClubActivo(){
+  const eq = fmtCtrlEquipoActual;
+  return eq ? eq.nombre : 'Club';
+}
+let fmtCtrlEquipoActual = null;
+
+function fmtValorCampo(campo, datos){
+  if(campo === 'nombre') return fmtNombreSegunFormato(datos.nombre, arguments[2]);
+  if(campo === 'dorsal') return datos.dorsal || '';
+  if(campo === 'nacionalidad') return datos.nacionalidad || '';
+  if(campo === 'club') return datos.club || '';
+  return '';
+}
+
+// ---- HTML de un elemento ----
+function fmtElInterior(el, datos){
+  if(el.tipo === 'texto'){
+    let texto;
+    if(el.campo) texto = fmtValorCampo(el.campo, datos, el.formatoNombre);
+    else {
+      const enVivo = fmtDoc.textosControl && fmtDoc.textosControl[el.id];
+      texto = (enVivo != null && enVivo !== '') ? enVivo : (el.texto || 'Texto');
+    }
+    return `<div style="width:100%;height:100%;display:flex;${fmtEstiloTexto(el,'color')}background:${el.fondoActivo ? fmtPaintCss(el,'colorFondo') : 'transparent'};font-size:${el.fontSize||32}px;font-weight:${el.bold?700:400};font-family:var(--sans);justify-content:${el.align||'flex-start'};align-items:${el.vAlign||'center'};padding:2px 4px;box-sizing:border-box;line-height:1.15;">${escapeHtml(texto)}</div>`;
   }
-  return nombreCompleto;
+  if(el.tipo === 'forma'){
+    return `<div style="width:100%;height:100%;background:${fmtPaintCss(el,'colorFondo')};border-radius:${el.radio||0}px;"></div>`;
+  }
+  if(el.tipo === 'imagen'){
+    let url = el.url || '';
+    if(el.campo === 'foto') url = datos.jugadorId ? (mediosCuerpoPorJugador[datos.jugadorId] || '') : '';
+    if(el.campo === 'escudo') url = datos.escudoUrl || '';
+    return url ? `<img src="${escapeHtml(url)}" style="${fmtEstiloImagen(el)}" alt="">`
+               : `<div style="width:100%;height:100%;background:${fmtPaintCss(el,'colorFondo')};"></div>`;
+  }
+  return '';
+}
+
+// Devuelve el HTML de una lista de elementos. ctx define el modo y los datos.
+function fmtNodosHtml(lista, datos, ctx){
+  return lista.map((el, idx) => {
+    if(el.visible === false) return '';
+    const sel = (ctx.selId && el.id === ctx.selId) ? ' sel' : '';
+    if(el.tipo === 'proveedor') return '';   // no se dibuja: solo entrega datos
+    if(el.tipo === 'grupo'){
+      const prov = ctx.enVivo ? fmtProveedorDe(el) : null;
+      if(prov){
+        const filas = fmtFilas(prov.id);
+        return filas.map((p, i) => {
+          const d = { nombre:p.nombre, dorsal:p.dorsal, nacionalidad:p.nacionalidad||'',
+                      club:datos.club, jugadorId:p.jugadorId, escudoUrl:datos.escudoUrl, indice:i+1 };
+          const selP = (ctx.selId && p.id === ctx.selId) ? ' sel' : '';
+          // en formación cada fila tiene su posición; en lista se acomodan solas
+          let px = p.x, py = p.y, arrastrable = ' data-puesto="1"';
+          if(prov.subtipo === 'lista'){
+            const sep = prov.separacion == null ? 8 : prov.separacion;
+            if(prov.direccion === 'horizontal'){ px = el.x + i * (el.w + sep); py = el.y; }
+            else { px = el.x; py = el.y + i * (el.h + sep); }
+            arrastrable = '';
+          }
+          return `<div class="fmt-el fmt-grupo${selP}"${arrastrable} data-id="${p.id}" style="left:${px}px;top:${py}px;width:${el.w}px;height:${el.h}px;z-index:${idx+1};${el.opacidad==null||el.opacidad===1?'':`opacity:${el.opacidad};`}">
+            ${fmtNodosHtml(el.hijos||[], d, { ...ctx, selId:null })}
+            ${selP ? '<div class="fmt-handle"></div>' : ''}
+          </div>`;
+        }).join('');
+      }
+      return `<div class="fmt-el fmt-grupo${sel}" data-id="${el.id}" style="left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;z-index:${idx+1};${el.opacidad==null||el.opacidad===1?'':`opacity:${el.opacidad};`}">
+        ${fmtNodosHtml(el.hijos||[], datos, ctx)}
+        ${sel ? '<div class="fmt-handle"></div>' : ''}
+      </div>`;
+    }
+    return `<div class="fmt-el fmt-el-${el.tipo}${sel}" data-id="${el.id}" style="left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;z-index:${idx+1};${el.opacidad==null||el.opacidad===1?'':`opacity:${el.opacidad};`}">
+      ${fmtElInterior(el, datos)}${sel ? '<div class="fmt-handle"></div>' : ''}
+    </div>`;
+  }).join('');
 }
 
 function fmtCargarDoc(ctrl){
   fmtDoc = (ctrl.config && ctrl.config.doc) ? JSON.parse(JSON.stringify(ctrl.config.doc)) : fmtDocPorDefecto();
   if(!fmtDoc.formacion) fmtDoc.formacion = { campId:null, equipoId:null, puestos:[] };
+  if(!Array.isArray(fmtDoc.elementos)) fmtDoc.elementos = [];
   fmtSelId = null;
   document.getElementById('fmtCanvasW').value = fmtDoc.canvas.w;
   document.getElementById('fmtCanvasH').value = fmtDoc.canvas.h;
   document.getElementById('fmtCanvasBg').value = fmtDoc.canvas.bg || '#001824';
   document.getElementById('fmtCanvasTransp').checked = !!fmtDoc.canvas.transparente;
-  fmtSetModo('control');   // se abre en Control, que es el uso del día a día
+  const ref = allJugadoresMaestro.find(j => j.id === fmtDoc.refJugadorId);
+  document.getElementById('fmtRefJugador').value = ref ? ref.nombre_tv : '';
+  fmtHistorial = []; fmtHistPos = -1;
+  fmtSetModo('control');
+  fmtGuardarHistorial();
 }
 
-// ---- cambio de modo ----
 function fmtSetModo(modo){
   fmtModo = modo;
   document.querySelectorAll('.fmt-modo-btn').forEach(b => b.classList.toggle('active', b.dataset.modo === modo));
@@ -3084,474 +3362,640 @@ function fmtSetModo(modo){
   if(modo === 'control') fmtCtrlInit();
   fmtRender();
 }
-document.querySelectorAll('.fmt-modo-btn').forEach(btn => {
-  btn.addEventListener('click', () => fmtSetModo(btn.dataset.modo));
+document.querySelectorAll('.fmt-modo-btn').forEach(btn => btn.addEventListener('click', () => fmtSetModo(btn.dataset.modo)));
+
+function fmtCtx(){
+  return { selId: fmtSelId, enVivo: fmtModo === 'control' };
+}
+// ---- historial de cambios (deshacer / rehacer) ----
+let fmtHistorial = [], fmtHistPos = -1, fmtRestaurando = false;
+function fmtGuardarHistorial(){
+  if(!fmtDoc || fmtRestaurando) return;
+  const estado = JSON.stringify(fmtDoc);
+  if(fmtHistorial[fmtHistPos] === estado) return;
+  fmtHistorial = fmtHistorial.slice(0, fmtHistPos + 1);
+  fmtHistorial.push(estado);
+  if(fmtHistorial.length > 60) fmtHistorial.shift();
+  fmtHistPos = fmtHistorial.length - 1;
+  fmtActualizarBotonesHistorial();
+}
+function fmtRestaurar(pos){
+  if(pos < 0 || pos >= fmtHistorial.length) return;
+  fmtHistPos = pos;
+  fmtRestaurando = true;
+  fmtDoc = JSON.parse(fmtHistorial[pos]);
+  fmtSelId = null;
+  fmtRender();
+  fmtRestaurando = false;
+  fmtActualizarBotonesHistorial();
+}
+function fmtDeshacer(){ fmtRestaurar(fmtHistPos - 1); }
+function fmtRehacer(){ fmtRestaurar(fmtHistPos + 1); }
+function fmtActualizarBotonesHistorial(){
+  const u = document.getElementById('fmtUndoBtn'), r = document.getElementById('fmtRedoBtn');
+  if(u) u.disabled = fmtHistPos <= 0;
+  if(r) r.disabled = fmtHistPos >= fmtHistorial.length - 1;
+}
+document.getElementById('fmtUndoBtn').addEventListener('click', fmtDeshacer);
+document.getElementById('fmtRedoBtn').addEventListener('click', fmtRehacer);
+document.addEventListener('keydown', e => {
+  // solo dentro del editor de gráficas y si no se está escribiendo en un campo
+  if(activeSection !== 'flowics' || !fmtDoc) return;
+  const esCampo = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable;
+  if(esCampo) return;
+  const ctrl = e.ctrlKey || e.metaKey;
+  if(!ctrl) return;
+  if(e.key === 'z' && !e.shiftKey){ e.preventDefault(); fmtDeshacer(); }
+  else if((e.key === 'z' && e.shiftKey) || e.key === 'y'){ e.preventDefault(); fmtRehacer(); }
 });
 
-// ---- render del lienzo ----
+let fmtZoomManual = 'auto';
 function fmtRender(){
   const canvas = document.getElementById('fmtCanvas');
-  const wrap = canvas.parentElement;
-  const dispo = wrap.clientWidth - 28;
-  fmtZoom = Math.min(1, dispo / fmtDoc.canvas.w);
+  const holder = document.getElementById('fmtCanvasHolder');
+  const wrap = holder.parentElement;
+  const auto = Math.min(1, (wrap.clientWidth - 28) / fmtDoc.canvas.w);
+  fmtZoom = fmtZoomManual === 'auto' ? auto : parseFloat(fmtZoomManual);
   canvas.style.width = fmtDoc.canvas.w + 'px';
   canvas.style.height = fmtDoc.canvas.h + 'px';
   canvas.style.transform = `scale(${fmtZoom})`;
+  // el contenedor toma el tamaño ya escalado: así no queda espacio muerto alrededor
+  holder.style.width = (fmtDoc.canvas.w * fmtZoom) + 'px';
+  holder.style.height = (fmtDoc.canvas.h * fmtZoom) + 'px';
   wrap.style.height = (fmtDoc.canvas.h * fmtZoom + 28) + 'px';
-  canvas.style.background = fmtDoc.canvas.transparente ? 'transparent' : fmtRgba(fmtDoc.canvas.bg, fmtDoc.canvas.bgAlpha);
-  fmtPintarElementos(canvas);
+  fmtRenderSoloCanvas();
   fmtRenderPanelIzq();
   if(fmtModo === 'editor') fmtRenderInspector();
 }
 function fmtRenderSoloCanvas(){
   const canvas = document.getElementById('fmtCanvas');
   canvas.style.background = fmtDoc.canvas.transparente ? 'transparent' : fmtRgba(fmtDoc.canvas.bg, fmtDoc.canvas.bgAlpha);
-  fmtPintarElementos(canvas);
-}
-
-function fmtPintarElementos(canvas){
-  canvas.innerHTML = '';
-  fmtDoc.elementos.forEach(el => {
-    if(el.visible === false) return;
-    if(el.tipo === 'modulo-formacion'){
-      // en el EDITOR se muestra solo una tarjeta de muestra (el diseño), nunca la formación real;
-      // en CONTROL se muestran los jugadores que estén puestos en la cancha
-      if(fmtModo === 'editor'){
-        const node = document.createElement('div');
-        node.className = 'fmt-el fmt-el-jugador' + (el.id === fmtSelId ? ' selected' : '');
-        node.style.left = el.x + 'px'; node.style.top = el.y + 'px';
-        node.style.width = (el.tarjetaW||200) + 'px'; node.style.height = (el.tarjetaH||280) + 'px';
-        node.dataset.id = el.id;
-        node.innerHTML = fmtTarjetaJugadorHtml({
-          nombre: el.refJugadorNombre || 'Nombre Apellido', dorsal: el.refDorsal || '10', jugadorId: el.refJugadorId || null
-        }, el, el.id === fmtSelId ? fmtSelSub : null);
-        if(el.id === fmtSelId){ const h = document.createElement('div'); h.className='fmt-handle'; node.appendChild(h); }
-        canvas.appendChild(node);
-      } else {
-        fmtDoc.formacion.puestos.forEach(p => {
-          const node = document.createElement('div');
-          node.className = 'fmt-el fmt-el-jugador' + (p.id === fmtSelId ? ' selected' : '');
-          node.style.left = p.x + 'px'; node.style.top = p.y + 'px';
-          node.style.width = (el.tarjetaW||200) + 'px'; node.style.height = (el.tarjetaH||280) + 'px';
-          node.dataset.id = p.id; node.dataset.puesto = '1';
-          node.innerHTML = fmtTarjetaJugadorHtml(p, el);
-          if(p.id === fmtSelId){ const h = document.createElement('div'); h.className = 'fmt-handle'; node.appendChild(h); }
-          canvas.appendChild(node);
-        });
-      }
-      return;
-    }
-    const node = document.createElement('div');
-    node.className = 'fmt-el fmt-el-' + el.tipo + (el.id === fmtSelId ? ' selected' : '');
-    node.style.left = el.x + 'px'; node.style.top = el.y + 'px';
-    node.style.width = el.w + 'px'; node.style.height = el.h + 'px';
-    node.dataset.id = el.id;
-    node.innerHTML = fmtContenidoHtml(el);
-    if(el.id === fmtSelId && fmtModo === 'editor'){
-      const h = document.createElement('div'); h.className = 'fmt-handle'; node.appendChild(h);
-    }
-    canvas.appendChild(node);
-  });
-}
-
-// cómo se ve una tarjeta de jugador — el estilo lo define el módulo (plantilla)
-// estilo de la imagen dentro de la tarjeta (se aplica a todos los jugadores por igual)
-function fmtEstiloImagen(mod){
-  let s = `object-fit:${mod.imgFit||'cover'};object-position:${mod.imgPosX==null?50:mod.imgPosX}% ${mod.imgPosY==null?0:mod.imgPosY}%;`;
-  if(mod.imgZoom && mod.imgZoom !== 100) s += `transform:scale(${mod.imgZoom/100});`;
-  if(mod.imgRadio) s += `border-radius:${mod.imgRadio}px;`;
-  if(mod.imgBordeAncho) s += `border:${mod.imgBordeAncho}px solid ${fmtRgba(mod.imgBordeColor||'#ffffff', mod.imgBordeColorAlpha)};box-sizing:border-box;`;
-  if(mod.imgSombra) s += `filter:drop-shadow(${mod.sombraX==null?0:mod.sombraX}px ${mod.sombraY==null?4:mod.sombraY}px ${mod.sombraBlur==null?8:mod.sombraBlur}px ${fmtRgba(mod.sombraColor||'#000000', mod.sombraColorAlpha==null?0.5:mod.sombraColorAlpha)});`;
-  if(mod.imgMascara === 'circulo') s += 'clip-path:circle(50% at 50% 50%);';
-  if(mod.imgMascara === 'fade'){
-    const corte = mod.mascaraCorte==null?60:mod.mascaraCorte;
-    s += `-webkit-mask-image:linear-gradient(to bottom,#000 ${corte}%,transparent 100%);mask-image:linear-gradient(to bottom,#000 ${corte}%,transparent 100%);`;
-  }
-  return s;
-}
-
-// Las piezas internas de la tarjeta (foto, nombre, dorsal) se posicionan libremente
-// dentro de ella y tienen su propio nivel de capa.
-function fmtSubs(mod){
-  const w = mod.tarjetaW||200, h = mod.tarjetaH||280;
-  if(!mod.sub) mod.sub = {};
-  if(!mod.sub.foto)   mod.sub.foto   = { x:0, y:0, w:w, h:Math.round(h*0.82), z:1 };
-  if(!mod.sub.nombre) mod.sub.nombre = { x:0, y:Math.round(h*0.82), w:w, h:Math.round(h*0.18), z:3 };
-  if(!mod.sub.dorsal) mod.sub.dorsal = { x:6, y:6, w:52, h:44, z:4 };
-  return mod.sub;
-}
-function fmtSubStyle(s){
-  return `left:${s.x}px;top:${s.y}px;width:${s.w}px;height:${s.h}px;z-index:${s.z==null?1:s.z};`;
-}
-
-function fmtTarjetaJugadorHtml(p, mod, subSel){
-  const S = fmtSubs(mod);
-  const modo = mod.modoImagen || 'foto';
-  const colorTarjeta = fmtPaintCss(mod, 'colorTarjeta');
-  const estiloImg = fmtEstiloImagen(mod);
-
-  let visual = '';
-  if(modo === 'foto'){
-    const url = p.jugadorId ? mediosCuerpoPorJugador[p.jugadorId] : null;
-    visual = url ? `<img src="${escapeHtml(url)}" style="${estiloImg}" alt="">`
-                 : `<div style="width:100%;height:100%;background:${colorTarjeta};"></div>`;
-  } else if(modo === 'imagen-fija'){
-    visual = mod.imagenFijaUrl ? `<img src="${escapeHtml(mod.imagenFijaUrl)}" style="${estiloImg}" alt="">`
-                               : `<div style="width:100%;height:100%;background:${colorTarjeta};"></div>`;
-  } else {
-    visual = `<div style="width:100%;height:100%;background:${colorTarjeta};"></div>`;
-  }
-
-  const piezas = [];
-  piezas.push(`<div class="fmt-sub${subSel==='foto'?' sel':''}" data-sub="foto" style="${fmtSubStyle(S.foto)}">${visual}</div>`);
-
-  if(mod.mostrarNombre !== false){
-    piezas.push(`<div class="fmt-sub${subSel==='nombre'?' sel':''}" data-sub="nombre" style="${fmtSubStyle(S.nombre)}">
-      <div class="fmt-nombre" style="${fmtEstiloTexto(mod,'color')}background:${mod.fondoTextoActivo ? fmtPaintCss(mod,'colorFondoTexto') : 'transparent'};font-size:${mod.fontSize||16}px;font-weight:${mod.bold?700:400};font-family:var(--sans);justify-content:${mod.alignNombre||'center'};align-items:${mod.vAlignNombre||'center'};">${escapeHtml(fmtNombreSegunFormato(p.nombre, mod.formatoNombre))}</div>
-    </div>`);
-  }
-  if(mod.mostrarDorsal){
-    piezas.push(`<div class="fmt-sub${subSel==='dorsal'?' sel':''}" data-sub="dorsal" style="${fmtSubStyle(S.dorsal)}">
-      <div class="fmt-nombre" style="${fmtEstiloTexto(mod,'colorDorsal')}background:${mod.fondoDorsalActivo ? fmtPaintCss(mod,'colorFondoDorsal') : 'transparent'};font-size:${mod.fontSizeDorsal||mod.fontSize||16}px;font-weight:700;font-family:var(--sans);justify-content:${mod.alignDorsal||'center'};align-items:center;">${escapeHtml(p.dorsal||'')}</div>
-    </div>`);
-  }
-  return piezas.join('');
-}
-
-function fmtContenidoHtml(el){
-  if(el.tipo === 'texto'){
-    return `<div style="width:100%;${fmtEstiloTexto(el,'color')}font-size:${el.fontSize||32}px;font-weight:${el.bold?700:400};text-align:${el.align||'left'};font-family:var(--sans);">${escapeHtml(el.texto||'Texto')}</div>`;
-  }
-  if(el.tipo === 'forma'){
-    return `<div style="width:100%;height:100%;background:${fmtPaintCss(el,'colorFondo')};border-radius:${el.radio||0}px;"></div>`;
-  }
-  if(el.tipo === 'imagen'){
-    return el.url ? `<img src="${escapeHtml(el.url)}" alt="">` : '<div style="width:100%;height:100%;background:#0a2c3b;"></div>';
-  }
-  return '';
+  canvas.innerHTML = fmtNodosHtml(fmtDoc.elementos, fmtDatosDeMuestra(), fmtCtx());
 }
 
 // ---- panel izquierdo: capas (editor) o jugadores (control) ----
+// selecciona el contenido de la capa al renombrar, sin arrastrar la selección al resto de la página
+// cambia la selección sin reconstruir el panel: así el doble clic para renombrar
+// no pierde el elemento a mitad de camino
+function fmtSeleccionar(id){
+  if(fmtSelId === id) return;
+  fmtSelId = id;
+  document.querySelectorAll('#fmtPanelIzq .fmt-capa').forEach(n => n.classList.remove('selected'));
+  const fila = [...document.querySelectorAll('#fmtPanelIzq .fmt-capa')]
+    .find(n => n.__elId === id);
+  if(fila) fila.classList.add('selected');
+  fmtRenderSoloCanvas();
+  if(fmtModo === 'editor') fmtRenderInspector();
+}
+function fmtSeleccionarTexto(nodo){
+  const rango = document.createRange();
+  rango.selectNodeContents(nodo);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(rango);
+}
 function fmtRenderPanelIzq(){
   const box = document.getElementById('fmtPanelIzq');
   if(fmtModo === 'editor'){
-    const items = [...fmtDoc.elementos].reverse(); // el último dibujado queda arriba de todo
-    box.innerHTML = `<div class="fmt-panel-titulo">Capas</div>` + (items.length ? '' : '<p class="muted-note">Sin elementos.</p>');
-    items.forEach((el) => {
-      const idx = fmtDoc.elementos.indexOf(el);
-      const nombrePorDefecto = el.tipo === 'modulo-formacion' ? 'Módulo formación'
-                   : el.tipo === 'texto' ? 'Texto'
-                   : el.tipo === 'imagen' ? 'Imagen' : 'Forma';
+    const capas = fmtDoc.elementos.filter(e => e.tipo !== 'proveedor');
+    box.innerHTML = `<div class="fmt-panel-titulo">Capas</div>` + (capas.length ? '' : '<p class="muted-note">Sin elementos.</p>');
+    fmtPintarCapas(box, fmtDoc.elementos, 0);
+
+    // los proveedores no son capas visuales: van en su propia región
+    const provs = fmtProveedores();
+    const sec = document.createElement('div');
+    sec.className = 'fmt-seccion-prov';
+    sec.innerHTML = `<div class="fmt-panel-titulo">Proveedores de datos</div>` +
+      (provs.length ? '' : '<p class="muted-note">Ninguno. Usa «+ Proveedor».</p>');
+    provs.forEach(pv => {
       const div = document.createElement('div');
-      div.className = 'fmt-capa' + (el.id === fmtSelId ? ' selected' : '');
-      div.draggable = true;
-      div.dataset.idx = idx;
-      div.innerHTML = `<span class="agarre" title="Arrastra para reordenar">⠿</span>
-        <span class="ojo" title="Mostrar u ocultar">${el.visible === false ? '○' : '●'}</span>
-        <span class="nombre" contenteditable="true" spellcheck="false">${escapeHtml(el.nombre || nombrePorDefecto)}</span>`;
-
-      div.querySelector('.ojo').addEventListener('click', (e) => { e.stopPropagation(); el.visible = el.visible === false; fmtRender(); });
+      div.className = 'fmt-capa fmt-prov' + (pv.id === fmtSelId ? ' selected' : '');
+      div.__elId = pv.id;
+      div.innerHTML = `<span class="prov-ic">⛁</span>
+        <span class="nombre">${escapeHtml(pv.nombre || (pv.subtipo === 'lista' ? 'Lista' : 'Formación'))}</span>
+        <span class="badge-datos">${pv.subtipo === 'lista' ? 'lista' : 'formación'}</span>`;
       const nom = div.querySelector('.nombre');
-      nom.addEventListener('mousedown', e => e.stopPropagation());
-      nom.addEventListener('focus', () => { div.draggable = false; });
-      nom.addEventListener('blur', () => { div.draggable = true; el.nombre = nom.textContent.trim() || nombrePorDefecto; fmtRenderPanelIzq(); });
+      nom.addEventListener('dblclick', e => {
+        e.preventDefault(); e.stopPropagation();
+        nom.contentEditable = 'true';
+        setTimeout(() => { nom.focus(); fmtSeleccionarTexto(nom); }, 0);
+      });
+      nom.addEventListener('blur', () => {
+        nom.contentEditable = 'false';
+        pv.nombre = nom.textContent.trim() || null;
+        fmtRenderPanelIzq();
+      });
       nom.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); nom.blur(); } });
-
-      div.addEventListener('click', (e) => {
-        if(e.target.classList.contains('nombre') || e.target.classList.contains('ojo')) return;
-        fmtSelId = el.id; fmtRender();
+      div.addEventListener('click', e => {
+        if(e.target === nom && nom.contentEditable === 'true') return;
+        fmtSeleccionar(pv.id);
       });
-      // reordenar arrastrando
-      div.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', String(idx)); div.classList.add('dragging'); });
-      div.addEventListener('dragend', () => div.classList.remove('dragging'));
-      div.addEventListener('dragover', e => { e.preventDefault(); div.classList.add('dragover'); });
-      div.addEventListener('dragleave', () => div.classList.remove('dragover'));
-      div.addEventListener('drop', e => {
-        e.preventDefault(); div.classList.remove('dragover');
-        const desde = parseInt(e.dataTransfer.getData('text/plain'));
-        const hasta = parseInt(div.dataset.idx);
-        if(isNaN(desde) || desde === hasta) return;
-        const [m] = fmtDoc.elementos.splice(desde, 1);
-        fmtDoc.elementos.splice(hasta, 0, m);
-        fmtRender();
-      });
-      box.appendChild(div);
+      sec.appendChild(div);
     });
+    box.appendChild(sec);
+    fmtRenderTarjetaTextos(null);
   } else {
-    // modo control: lista de jugadores del equipo elegido
-    const puestos = new Set(fmtDoc.formacion.puestos.map(p => p.jugadorId));
+    const provAct = fmtProveedorActivo();
+    const puestos = new Set(provAct ? fmtFilas(provAct.id).map(p => p.jugadorId) : []);
     box.innerHTML = `<div class="fmt-panel-titulo">Jugadores</div>` +
       (fmtCtrlJugadores.length ? '' : '<p class="muted-note">Elige un campeonato y un equipo arriba.</p>');
     fmtCtrlJugadores.forEach(j => {
       const div = document.createElement('div');
       div.className = 'fmt-jug-item' + (puestos.has(j.jugador_id) ? ' puesto' : '');
       div.innerHTML = `<span class="dorsal">${escapeHtml(j.n||'')}</span><span class="nom">${escapeHtml(j.nombre||'')}</span>`;
-      div.title = puestos.has(j.jugador_id) ? 'Ya está en la cancha' : 'Clic para agregar a la cancha';
       div.addEventListener('click', () => fmtCtrlAgregarJugador(j));
       box.appendChild(div);
+    });
+
+    // textos que el diseño dejó abiertos para cambiar en vivo
+    const editables = [];
+    fmtRecorrer(fmtDoc.elementos, el => { if(el.tipo === 'texto' && !el.campo && el.editableControl) editables.push(el); });
+    fmtRenderTarjetaTextos(editables);
+  }
+}
+
+// tarjeta propia, fuera del panel con scroll de jugadores
+function fmtRenderTarjetaTextos(editables){
+  const cont = document.getElementById('fmtTextosCtrl');
+  if(!cont) return;
+  if(fmtModo !== 'control' || !editables || !editables.length){ cont.innerHTML = ''; return; }
+  if(!fmtDoc.textosControl) fmtDoc.textosControl = {};
+  cont.innerHTML = `<div class="fmt-tarjeta-textos"><div class="fmt-panel-titulo">Textos</div></div>`;
+  const caja = cont.firstChild;
+  editables.forEach(el => {
+    const fila = document.createElement('div');
+    fila.style.marginBottom = '8px';
+    const etiqueta = el.nombre || (el.texto || 'Texto').slice(0, 22);
+    fila.innerHTML = `<label class="fmt-txt-lbl">${escapeHtml(etiqueta)}</label>
+      <input type="text" class="fmt-txt-ctrl" value="${escapeHtml(fmtDoc.textosControl[el.id] != null ? fmtDoc.textosControl[el.id] : (el.texto||''))}">`;
+    fila.querySelector('input').addEventListener('input', ev => {
+      fmtDoc.textosControl[el.id] = ev.target.value;
+      fmtRenderSoloCanvas();
+    });
+    caja.appendChild(fila);
+  });
+}
+const NOMBRE_TIPO = { proveedor:'Proveedor', grupo:'Grupo', texto:'Texto', forma:'Forma', imagen:'Imagen' };
+function fmtPintarCapas(box, lista, nivel){
+  [...lista].reverse().forEach(el => {
+    if(el.tipo === 'proveedor') return;   // van en su propia sección
+    const idx = lista.indexOf(el);
+    const div = document.createElement('div');
+    div.className = 'fmt-capa' + (el.id === fmtSelId ? ' selected' : '');
+    div.__elId = el.id;
+    div.style.paddingLeft = (8 + nivel * 14) + 'px';
+    div.draggable = true;
+    div.dataset.idx = idx;
+    const etiqueta = el.nombre || (el.tipo === 'texto' && el.campo ? (CAMPOS_TEXTO.find(x=>x.key===el.campo)||{}).label : null) || NOMBRE_TIPO[el.tipo];
+    div.innerHTML = `<span class="agarre">⠿</span>
+      ${el.tipo === 'grupo' ? `<span class="plegar">${el.plegado ? '▸' : '▾'}</span>` : ''}
+      <span class="ojo${el.visible === false ? ' apagado' : ''}" title="${el.visible === false ? 'Mostrar' : 'Ocultar'} esta capa">${el.visible === false ? '🚫' : '👁'}</span>
+      <span class="nombre" spellcheck="false" title="Doble clic para renombrar">${escapeHtml(etiqueta)}</span>
+      ${el.tipo === 'grupo' && el.proveedorId ? '<span class="badge-datos">conectado</span>' : ''}`;
+    div.querySelector('.ojo').addEventListener('click', e => { e.stopPropagation(); el.visible = el.visible === false; fmtRender(); });
+    const pleg = div.querySelector('.plegar');
+    if(pleg) pleg.addEventListener('click', e => { e.stopPropagation(); el.plegado = !el.plegado; fmtRenderPanelIzq(); });
+    const nom = div.querySelector('.nombre');
+    nom.addEventListener('mousedown', () => { div.draggable = false; });
+    nom.addEventListener('dblclick', e => {
+      e.preventDefault(); e.stopPropagation();
+      div.draggable = false;
+      nom.contentEditable = 'true';
+      setTimeout(() => { nom.focus(); fmtSeleccionarTexto(nom); }, 0);
+    });
+    nom.addEventListener('blur', () => {
+      nom.contentEditable = 'false'; div.draggable = true;
+      el.nombre = nom.textContent.trim() || null;
+      fmtRenderPanelIzq();
+    });
+    div.addEventListener('mouseleave', () => { if(nom.contentEditable !== 'true') div.draggable = true; });
+    nom.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); nom.blur(); } });
+    div.addEventListener('click', e => {
+      if(e.target.classList.contains('ojo') || e.target.classList.contains('plegar')) return;
+      if(e.target === nom && nom.contentEditable === 'true') return;
+      fmtSeleccionar(el.id);
+    });
+    div.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', el.id); div.classList.add('dragging'); });
+    div.addEventListener('dragend', () => div.classList.remove('dragging'));
+    div.addEventListener('dragover', e => { e.preventDefault(); div.classList.add('dragover'); });
+    div.addEventListener('dragleave', () => div.classList.remove('dragover'));
+    div.addEventListener('drop', e => {
+      e.preventDefault(); div.classList.remove('dragover');
+      const idOrigen = e.dataTransfer.getData('text/plain');
+      if(!idOrigen || idOrigen === el.id) return;
+      const org = fmtBuscar(idOrigen);
+      if(!org) return;
+      // no permitir soltar un grupo dentro de sí mismo
+      let dentro = false;
+      if(org.el.tipo === 'grupo') fmtRecorrer(org.el.hijos||[], h => { if(h.id === el.id) dentro = true; });
+      if(dentro) return;
+      const iOrigen = org.lista.indexOf(org.el);
+      const iDestinoPrevio = lista.indexOf(el);
+      const mismaLista = org.lista === lista;
+      org.lista.splice(iOrigen, 1);
+      // el proveedor es siempre una capa de primer nivel: no se anida dentro de un grupo
+      if(el.tipo === 'grupo' && !el.plegado && org.el.tipo !== 'proveedor'){
+        el.hijos = el.hijos || [];
+        el.hijos.push(org.el);          // soltar sobre un grupo abierto = meterlo dentro
+      } else if(org.el.tipo === 'proveedor' && lista !== fmtDoc.elementos){
+        fmtDoc.elementos.push(org.el);   // el proveedor siempre vuelve al primer nivel
+      } else {
+        // el panel se muestra al revés (arriba = adelante), así que al soltar sobre una
+        // capa hay que dejar el elemento en ese lugar visual, no siempre detrás
+        let iDestino = lista.indexOf(el);
+        if(mismaLista && iOrigen < iDestinoPrevio) iDestino += 1;
+        lista.splice(iDestino, 0, org.el);
+      }
+      fmtRender();
+      fmtGuardarHistorial();
+    });
+    box.appendChild(div);
+    if(el.tipo === 'grupo' && el.hijos && !el.plegado) fmtPintarCapas(box, el.hijos, nivel + 1);
+  });
+}
+
+// ---- inspector ----
+function fmtRenderInspector(){
+  const box = document.getElementById('fmtInspector');
+  const encontrado = fmtSelId ? fmtBuscar(fmtSelId) : null;
+  if(!encontrado){ box.innerHTML = '<p class="muted-note">Selecciona un elemento o una capa para editar sus propiedades.</p>'; return; }
+  const el = encontrado.el;
+
+  let campos = `<p class="muted-note" style="margin:0 0 6px;">${NOMBRE_TIPO[el.tipo]}</p>`;
+
+  if(el.tipo === 'proveedor'){
+    campos += `<p class="muted-note" style="font-size:10.5px;margin:0 0 8px;">Entrega los datos. Conecta un grupo a este proveedor para que se repita.</p>
+      <label>Tipo</label>
+      <select data-p="subtipo">
+        <option value="formacion" ${el.subtipo==='formacion'?'selected':''}>Formación (posición libre)</option>
+        <option value="lista" ${el.subtipo==='lista'?'selected':''}>Lista (se acomoda sola)</option>
+      </select>
+      ${el.subtipo === 'lista' ? `
+        <label>Dirección</label>
+        <select data-p="direccion">
+          <option value="vertical" ${el.direccion!=='horizontal'?'selected':''}>Vertical</option>
+          <option value="horizontal" ${el.direccion==='horizontal'?'selected':''}>Horizontal</option>
+        </select>
+        <label>Separación</label><input type="number" data-p="separacion" value="${el.separacion==null?8:el.separacion}">` : ''}`;
+    box.innerHTML = campos;
+    box.querySelectorAll('[data-p]').forEach(input => {
+      input.addEventListener('change', () => {
+        const p = input.dataset.p;
+        el[p] = p === 'separacion' ? (parseFloat(input.value)||0) : input.value;
+        fmtRender();
+      });
+    });
+    fmtNumerosArrastrables(box);
+    return;
+  }
+
+  campos += `
+    <div class="row2">
+      <div><label>X</label><input type="number" data-p="x" value="${el.x}"></div>
+      <div><label>Y</label><input type="number" data-p="y" value="${el.y}"></div>
+    </div>
+    <div class="row2">
+      <div><label>Ancho</label><input type="number" data-p="w" value="${el.w}"></div>
+      <div><label>Alto</label><input type="number" data-p="h" value="${el.h}"></div>
+    </div>`;
+
+  const opctPct = el.opacidad==null?100:Math.round(el.opacidad*100);
+  campos += `<label>Opacidad</label>
+    <div class="fmt-opacidad">
+      <input type="range" class="op-slider" min="0" max="100" step="1" value="${opctPct}">
+      <input type="number" class="op-num" data-p="opacidadPct" value="${opctPct}" min="0" max="100" step="5">
+      <span class="muted-note">%</span>
+    </div>`;
+
+  if(el.tipo === 'grupo'){
+    const provs = fmtProveedores();
+    campos += `<label>Conectar a proveedor</label>
+      <select data-p="proveedorId">
+        <option value="">— ninguno —</option>
+        ${provs.map(pv => `<option value="${pv.id}" ${el.proveedorId===pv.id?'selected':''}>${escapeHtml(pv.nombre || (pv.subtipo==='lista'?'Lista':'Formación'))}</option>`).join('')}
+      </select>
+      <p class="muted-note" style="font-size:10.5px;margin:0 0 8px;">${provs.length ? 'El grupo se dibuja una vez por cada fila del proveedor.' : 'Primero agrega un proveedor con el botón «+ Proveedor».'}</p>`;
+  }
+  if(el.tipo === 'texto'){
+    const conectable = fmtDentroDeGrupoConectado(el.id);
+    const opciones = conectable ? CAMPOS_TEXTO : CAMPOS_TEXTO.filter(x => x.key === '');
+    campos += `<label>Conectar a</label>
+      <select data-p="campo" ${conectable?'':'disabled'}>${opciones.map(x => `<option value="${x.key}" ${(el.campo||'')===x.key?'selected':''}>${x.label}</option>`).join('')}</select>
+      ${conectable ? '' : '<p class="muted-note" style="font-size:10.5px;margin:0 0 8px;">Para conectar a datos, este texto debe estar dentro de un grupo conectado a un proveedor.</p>'}
+      ${!el.campo ? `<label>Texto</label><input type="text" data-p="texto" value="${escapeHtml(el.texto||'')}">
+        <label><input type="checkbox" data-p="editableControl" ${el.editableControl?'checked':''}> Editable desde Control</label>
+        <p class="muted-note" style="font-size:10.5px;margin:0 0 8px;">Permite cambiar este texto en vivo, sin abrir el editor.</p>` : ''}
+      ${el.campo === 'nombre' ? `<label>Formato</label>
+        <select data-p="formatoNombre">
+          <option value="completo" ${!el.formatoNombre||el.formatoNombre==='completo'?'selected':''}>Nombre completo</option>
+          <option value="inicial-apellido" ${el.formatoNombre==='inicial-apellido'?'selected':''}>Inicial y apellido</option>
+          <option value="apellido" ${el.formatoNombre==='apellido'?'selected':''}>Solo apellido</option>
+        </select>` : ''}
+      ${fmtColorAlphaHtml('Color','color','colorAlpha', el.color||'#ffffff', el.colorAlpha)}
+      <label>Tamaño</label><input type="number" data-p="fontSize" value="${el.fontSize||32}">
+      <label><input type="checkbox" data-p="bold" ${el.bold?'checked':''}> Negrita</label>
+      <label>Alineación</label>
+      <div class="row2">
+        <div><select data-p="align">
+          <option value="flex-start" ${!el.align||el.align==='flex-start'?'selected':''}>Izquierda</option>
+          <option value="center" ${el.align==='center'?'selected':''}>Centro</option>
+          <option value="flex-end" ${el.align==='flex-end'?'selected':''}>Derecha</option>
+        </select></div>
+        <div><select data-p="vAlign">
+          <option value="flex-start" ${el.vAlign==='flex-start'?'selected':''}>Arriba</option>
+          <option value="center" ${!el.vAlign||el.vAlign==='center'?'selected':''}>Medio</option>
+          <option value="flex-end" ${el.vAlign==='flex-end'?'selected':''}>Abajo</option>
+        </select></div>
+      </div>
+      <label><input type="checkbox" data-p="fondoActivo" ${el.fondoActivo?'checked':''}> Caja de fondo</label>
+      ${el.fondoActivo ? fmtColorAlphaHtml('Color de la caja','colorFondo','colorFondoAlpha', el.colorFondo||'#001824', el.colorFondoAlpha==null?1:el.colorFondoAlpha) : ''}`;
+  }
+  if(el.tipo === 'forma'){
+    campos += `${fmtColorAlphaHtml('Color','colorFondo','colorFondoAlpha', el.colorFondo||'#ff27ff', el.colorFondoAlpha)}
+      <label>Redondeo</label><input type="number" data-p="radio" value="${el.radio||0}">`;
+  }
+  if(el.tipo === 'imagen'){
+    const conectableImg = fmtDentroDeGrupoConectado(el.id);
+    const opcImg = conectableImg ? CAMPOS_IMAGEN : CAMPOS_IMAGEN.filter(x => x.key === '');
+    campos += `<label>Conectar a</label>
+      <select data-p="campo" ${conectableImg?'':'disabled'}>${opcImg.map(x => `<option value="${x.key}" ${(el.campo||'')===x.key?'selected':''}>${x.label}</option>`).join('')}</select>
+      ${conectableImg ? '' : '<p class="muted-note" style="font-size:10.5px;margin:0 0 8px;">Para conectar a datos, esta imagen debe estar dentro de un grupo conectado a un proveedor.</p>'}
+      ${!el.campo ? `<button class="ghost" id="fmtSubirImgBtn" style="width:100%;margin-bottom:6px;">Subir imagen…</button><input type="file" id="fmtSubirImgInput" accept="image/*" style="display:none;">` : ''}
+      ${el.campo === 'foto' ? `<label>Jugador de referencia</label>
+        <input type="text" class="fmt-ref-jug" list="actingsJugadoresDatalist" placeholder="Buscar jugador…" value="${escapeHtml(fmtNombreRefActual())}">
+        <p class="muted-note" style="font-size:10.5px;margin:0 0 8px;">Solo para ver el diseño con una foto real. No afecta la salida al aire.</p>` : ''}
+      <label>Ajuste</label>
+      <select data-p="imgFit">
+        <option value="cover" ${!el.imgFit||el.imgFit==='cover'?'selected':''}>Rellenar (recorta)</option>
+        <option value="contain" ${el.imgFit==='contain'?'selected':''}>Contener</option>
+      </select>
+      <label>Encuadre X / Y (%)</label>
+      <p class="muted-note" style="margin:0 0 4px;font-size:10.5px;">Admite valores fuera de 0–100.</p>
+      <div class="row2">
+        <div><input type="number" data-p="imgPosX" value="${el.imgPosX==null?50:el.imgPosX}" step="5"></div>
+        <div><input type="number" data-p="imgPosY" value="${el.imgPosY==null?0:el.imgPosY}" step="5"></div>
+      </div>
+      <label>Zoom (%)</label><input type="number" data-p="imgZoom" value="${el.imgZoom==null?100:el.imgZoom}" step="5">
+      <label>Máscara</label>
+      <select data-p="imgMascara">
+        <option value="" ${!el.imgMascara?'selected':''}>Ninguna</option>
+        <option value="circulo" ${el.imgMascara==='circulo'?'selected':''}>Círculo</option>
+        <option value="fade" ${el.imgMascara==='fade'?'selected':''}>Desvanecer abajo</option>
+      </select>
+      ${el.imgMascara==='fade' ? `<label>Desvanecido: inicio / fin (%)</label>
+        <div class="row2">
+          <div><input type="number" data-p="mascaraCorte" value="${el.mascaraCorte==null?60:el.mascaraCorte}"></div>
+          <div><input type="number" data-p="mascaraFin" value="${el.mascaraFin==null?100:el.mascaraFin}"></div>
+        </div>` : ''}
+      <label>Redondeo</label><input type="number" data-p="imgRadio" value="${el.imgRadio||0}">
+      <label>Grosor del borde</label><input type="number" data-p="imgBordeAncho" value="${el.imgBordeAncho||0}">
+      ${el.imgBordeAncho ? fmtColorAlphaHtml('Color del borde','imgBordeColor','imgBordeColorAlpha', el.imgBordeColor||'#ffffff', el.imgBordeColorAlpha) : ''}
+      <label><input type="checkbox" data-p="imgSombra" ${el.imgSombra?'checked':''}> Sombra</label>
+      ${el.imgSombra ? `<div class="row2">
+          <div><label>X</label><input type="number" data-p="sombraX" value="${el.sombraX==null?0:el.sombraX}"></div>
+          <div><label>Y</label><input type="number" data-p="sombraY" value="${el.sombraY==null?4:el.sombraY}"></div>
+        </div>
+        <label>Desenfoque</label><input type="number" data-p="sombraBlur" value="${el.sombraBlur==null?8:el.sombraBlur}">
+        ${fmtColorAlphaHtml('Color de la sombra','sombraColor','sombraColorAlpha', el.sombraColor||'#000000', el.sombraColorAlpha==null?0.5:el.sombraColorAlpha)}` : ''}`;
+  }
+  box.innerHTML = campos;
+
+  if(el.campo && (el.tipo === 'texto' || el.tipo === 'imagen') && !fmtDentroDeGrupoConectado(el.id)) el.campo = '';
+  const REDIBUJA = ['campo','fondoActivo','imgMascara','imgSombra','imgBordeAncho','proveedorId','editableControl'];
+  const NUMEROS = ['x','y','w','h','fontSize','radio','imgRadio','imgBordeAncho','imgPosX','imgPosY',
+                   'sombraX','sombraY','sombraBlur','mascaraCorte','mascaraFin','imgZoom','opacidadPct'];
+  box.querySelectorAll('[data-p]').forEach(input => {
+    const evento = (input.type === 'checkbox' || input.tagName === 'SELECT') ? 'change' : 'input';
+    input.addEventListener(evento, () => {
+      const p = input.dataset.p;
+      let v = input.type === 'checkbox' ? input.checked : input.value;
+      if(NUMEROS.includes(p)) v = parseFloat(v) || 0;
+      if(p === 'opacidadPct'){
+        const pct = Math.max(0, Math.min(100, parseFloat(v)||0));
+        input.value = pct;
+        const sl = box.querySelector('.op-slider');
+        if(sl){ sl.value = pct; sl.style.setProperty('--relleno', pct + '%'); }
+        el.opacidad = pct/100;
+      }
+      else el[p] = v;
+      if(REDIBUJA.includes(p)) fmtRender(); else fmtRenderSoloCanvas();
+      clearTimeout(window.__fmtHistTimer);
+      window.__fmtHistTimer = setTimeout(fmtGuardarHistorial, 500);
+    });
+  });
+  fmtEngancharSwatches(box, el, () => fmtRenderSoloCanvas());
+  fmtNumerosArrastrables(box);
+
+  const slider = box.querySelector('.op-slider'), numOp = box.querySelector('.op-num');
+  if(slider && numOp){
+    const pintarRelleno = () => slider.style.setProperty('--relleno', slider.value + '%');
+    pintarRelleno();
+    slider.addEventListener('input', () => {
+      numOp.value = slider.value;
+      pintarRelleno();
+      el.opacidad = Math.max(0, Math.min(1, parseFloat(slider.value)/100));
+      fmtRenderSoloCanvas();
+    });
+    numOp.addEventListener('input', () => {
+      slider.value = Math.max(0, Math.min(100, parseFloat(numOp.value) || 0));
+      pintarRelleno();
+    });
+  }
+
+  const refJug = box.querySelector('.fmt-ref-jug');
+  if(refJug){
+    refJug.addEventListener('input', () => {
+      const j = resolveJugadorPorTexto(refJug.value);
+      fmtDoc.refJugadorId = j ? j.id : null;
+      const barra = document.getElementById('fmtRefJugador');
+      if(barra) barra.value = refJug.value;
+      fmtRenderSoloCanvas();
+    });
+  }
+
+  const btnImg = box.querySelector('#fmtSubirImgBtn');
+  if(btnImg){
+    const inp = box.querySelector('#fmtSubirImgInput');
+    btnImg.addEventListener('click', () => inp.click());
+    inp.addEventListener('change', async e => {
+      const file = e.target.files[0]; if(!file) return;
+      const ext = (file.name.split('.').pop()||'png').toLowerCase();
+      const path = `${flowicsDetailId}_${Date.now()}.${ext}`;
+      const { error } = await sb.storage.from('graficas').upload(path, file, { upsert:true, contentType:file.type });
+      if(error){ alert('Error subiendo la imagen: ' + error.message); return; }
+      const { data:pub } = sb.storage.from('graficas').getPublicUrl(path);
+      el.url = pub.publicUrl; fmtRender();
     });
   }
 }
 
-// ---- inspector (solo modo editor) ----
-// permite cambiar un número arrastrando el ratón sobre el campo (además de escribirlo)
-function fmtNumerosArrastrables(box, alCambiar){
+// permite cambiar un número arrastrando el ratón sobre el campo
+function fmtNumerosArrastrables(box){
   box.querySelectorAll('input[type=number]').forEach(input => {
-    input.addEventListener('mousedown', (e) => {
-      const inicioX = e.clientX;
-      const valorInicial = parseFloat(input.value) || 0;
-      const paso = parseFloat(input.step) || 1;
+    input.addEventListener('mousedown', e => {
+      const inicioX = e.clientX, valorInicial = parseFloat(input.value)||0, paso = parseFloat(input.step)||1;
       let arrastrando = false;
-      const mover = (ev) => {
+      const mover = ev => {
         const dx = ev.clientX - inicioX;
-        if(!arrastrando && Math.abs(dx) < 3) return;  // clic normal si casi no se movió
+        if(!arrastrando && Math.abs(dx) < 3) return;
         if(!arrastrando){ arrastrando = true; document.body.style.cursor = 'ew-resize'; }
         ev.preventDefault();
         input.value = Math.round((valorInicial + dx * paso) * 100) / 100;
         input.dispatchEvent(new Event('input', { bubbles:true }));
       };
       const soltar = () => {
-        window.removeEventListener('mousemove', mover);
-        window.removeEventListener('mouseup', soltar);
-        if(arrastrando){ document.body.style.cursor = ''; if(alCambiar) alCambiar(); }
+        window.removeEventListener('mousemove', mover); window.removeEventListener('mouseup', soltar);
+        if(arrastrando) document.body.style.cursor = '';
       };
-      window.addEventListener('mousemove', mover);
-      window.addEventListener('mouseup', soltar);
+      window.addEventListener('mousemove', mover); window.addEventListener('mouseup', soltar);
     });
   });
 }
 
-function fmtRenderInspector(){
-  const box = document.getElementById('fmtInspector');
-  const el = fmtDoc.elementos.find(e => e.id === fmtSelId);
-  if(!el){ box.innerHTML = '<p class="muted-note">Selecciona un elemento o una capa para editar sus propiedades.</p>'; return; }
-
-  let campos = '';
-  if(el.tipo !== 'modulo-formacion'){
-    campos += `
-      <div class="row2">
-        <div><label>X</label><input type="number" data-p="x" value="${el.x}"></div>
-        <div><label>Y</label><input type="number" data-p="y" value="${el.y}"></div>
-      </div>
-      <div class="row2">
-        <div><label>Ancho</label><input type="number" data-p="w" value="${el.w}"></div>
-        <div><label>Alto</label><input type="number" data-p="h" value="${el.h}"></div>
-      </div>`;
-  }
-
-  if(el.tipo === 'modulo-formacion'){
-    const S = fmtSubs(el);
-    const s = fmtSelSub ? S[fmtSelSub] : null;
-    campos += `<p class="muted-note" style="margin:0 0 8px;">Define cómo se ve cada jugador. Haz clic en una pieza de la tarjeta para moverla.</p>
-      <label>Pieza de la tarjeta</label>
-      <div class="fmt-picker-row">
-        <button class="fmt-parada ${fmtSelSub==='foto'?'activa':''}" data-sub-sel="foto">Foto</button>
-        <button class="fmt-parada ${fmtSelSub==='nombre'?'activa':''}" data-sub-sel="nombre">Nombre</button>
-        <button class="fmt-parada ${fmtSelSub==='dorsal'?'activa':''}" data-sub-sel="dorsal">Dorsal</button>
-      </div>
-      ${s ? `
-        <div class="row2">
-          <div><label>X</label><input type="number" data-sub="x" value="${s.x}"></div>
-          <div><label>Y</label><input type="number" data-sub="y" value="${s.y}"></div>
-        </div>
-        <div class="row2">
-          <div><label>Ancho</label><input type="number" data-sub="w" value="${s.w}"></div>
-          <div><label>Alto</label><input type="number" data-sub="h" value="${s.h}"></div>
-        </div>
-        <label>Capa (mayor = más adelante)</label><input type="number" data-sub="z" value="${s.z==null?1:s.z}">
-        <hr style="border:none;border-top:1px solid var(--line);margin:12px 0;">` : ''}
-      <label>Tamaño de tarjeta</label>
-      <div class="row2">
-        <div><input type="number" data-p="tarjetaW" value="${el.tarjetaW||200}"></div>
-        <div><input type="number" data-p="tarjetaH" value="${el.tarjetaH||280}"></div>
-      </div>
-      <label>Mostrar al jugador como</label>
-      <select data-p="modoImagen">
-        <option value="foto" ${el.modoImagen==='foto'||!el.modoImagen?'selected':''}>Foto del jugador</option>
-        <option value="imagen-fija" ${el.modoImagen==='imagen-fija'?'selected':''}>Imagen fija (camiseta)</option>
-        <option value="solo-color" ${el.modoImagen==='solo-color'?'selected':''}>Solo color</option>
-      </select>
-      ${el.modoImagen === 'imagen-fija' ? `<label>Imagen fija</label><button class="ghost" id="fmtModImagenBtn" style="width:100%;">Subir imagen…</button><input type="file" id="fmtModImagenInput" accept="image/*" style="display:none;">` : ''}
-      ${el.modoImagen !== 'solo-color' ? `
-        <label>Jugador de referencia (solo para ver el diseño)</label>
-        <input type="text" list="actingsJugadoresDatalist" data-p="refJugadorNombre" value="${escapeHtml(el.refJugadorNombre||'')}" placeholder="Buscar jugador…">
-        <label>Ajuste de la imagen</label>
-        <select data-p="imgFit">
-          <option value="cover" ${!el.imgFit||el.imgFit==='cover'?'selected':''}>Rellenar (recorta)</option>
-          <option value="contain" ${el.imgFit==='contain'?'selected':''}>Contener (entra completa)</option>
-        </select>
-        <label>Encuadre horizontal / vertical (%)</label>
-        <p class="muted-note" style="margin:0 0 4px;font-size:10.5px;">Admite valores fuera de 0–100 (ej. -50 o 150) para correr la foto más allá del borde.</p>
-        <div class="row2">
-          <div><input type="number" data-p="imgPosX" value="${el.imgPosX==null?50:el.imgPosX}" step="5"></div>
-          <div><input type="number" data-p="imgPosY" value="${el.imgPosY==null?0:el.imgPosY}" step="5"></div>
-        </div>
-        <label>Zoom de la imagen (%)</label><input type="number" data-p="imgZoom" value="${el.imgZoom==null?100:el.imgZoom}" step="5">
-        <label>Máscara</label>
-        <select data-p="imgMascara">
-          <option value="" ${!el.imgMascara?'selected':''}>Ninguna</option>
-          <option value="circulo" ${el.imgMascara==='circulo'?'selected':''}>Círculo</option>
-          <option value="fade" ${el.imgMascara==='fade'?'selected':''}>Desvanecer abajo</option>
-        </select>
-        ${el.imgMascara==='fade' ? `<label>Dónde empieza a desvanecer (%)</label><input type="number" data-p="mascaraCorte" value="${el.mascaraCorte==null?60:el.mascaraCorte}" min="0" max="100">` : ''}
-        <label>Redondeo de la imagen</label><input type="number" data-p="imgRadio" value="${el.imgRadio||0}">
-        <label>Grosor del borde</label><input type="number" data-p="imgBordeAncho" value="${el.imgBordeAncho||0}">
-        ${el.imgBordeAncho ? fmtColorAlphaHtml('Color del borde','imgBordeColor','imgBordeColorAlpha', el.imgBordeColor||'#ffffff', el.imgBordeColorAlpha) : ''}
-        <label><input type="checkbox" data-p="imgSombra" ${el.imgSombra?'checked':''}> Sombra</label>
-        ${el.imgSombra ? `
-          <label>Desplazamiento X / Y</label>
-          <div class="row2">
-            <div><input type="number" data-p="sombraX" value="${el.sombraX==null?0:el.sombraX}"></div>
-            <div><input type="number" data-p="sombraY" value="${el.sombraY==null?4:el.sombraY}"></div>
-          </div>
-          <label>Desenfoque</label><input type="number" data-p="sombraBlur" value="${el.sombraBlur==null?8:el.sombraBlur}">
-          ${fmtColorAlphaHtml('Color de la sombra','sombraColor','sombraColorAlpha', el.sombraColor||'#000000', el.sombraColorAlpha==null?0.5:el.sombraColorAlpha)}` : ''}
-      ` : ''}
-      ${fmtColorAlphaHtml('Color de la tarjeta','colorTarjeta','colorTarjetaAlpha', el.colorTarjeta||'#0a2c3b', el.colorTarjetaAlpha)}
-      <label><input type="checkbox" data-p="mostrarNombre" ${el.mostrarNombre === false ? '' : 'checked'}> Mostrar nombre</label>
-      <label>Alineación del nombre</label>
-      <div class="row2">
-        <div><select data-p="alignNombre">
-          <option value="flex-start" ${el.alignNombre==='flex-start'?'selected':''}>Izquierda</option>
-          <option value="center" ${!el.alignNombre||el.alignNombre==='center'?'selected':''}>Centro</option>
-          <option value="flex-end" ${el.alignNombre==='flex-end'?'selected':''}>Derecha</option>
-        </select></div>
-        <div><select data-p="vAlignNombre">
-          <option value="flex-start" ${el.vAlignNombre==='flex-start'?'selected':''}>Arriba</option>
-          <option value="center" ${!el.vAlignNombre||el.vAlignNombre==='center'?'selected':''}>Medio</option>
-          <option value="flex-end" ${el.vAlignNombre==='flex-end'?'selected':''}>Abajo</option>
-        </select></div>
-      </div>
-      <label>Formato del nombre</label>
-      <select data-p="formatoNombre">
-        <option value="completo" ${!el.formatoNombre||el.formatoNombre==='completo'?'selected':''}>Nombre completo</option>
-        <option value="inicial-apellido" ${el.formatoNombre==='inicial-apellido'?'selected':''}>Inicial y apellido (X. Apellido)</option>
-        <option value="apellido" ${el.formatoNombre==='apellido'?'selected':''}>Solo apellido</option>
-      </select>
-      <label><input type="checkbox" data-p="mostrarDorsal" ${el.mostrarDorsal ? 'checked' : ''}> Mostrar dorsal</label>
-      ${el.mostrarDorsal ? `<label>Tamaño del dorsal</label><input type="number" data-p="fontSizeDorsal" value="${el.fontSizeDorsal||el.fontSize||16}">
-        <label><input type="checkbox" data-p="fondoDorsalActivo" ${el.fondoDorsalActivo?'checked':''}> Caja de fondo en el dorsal</label>
-        ${el.fondoDorsalActivo ? fmtColorAlphaHtml('Color de la caja del dorsal','colorFondoDorsal','colorFondoDorsalAlpha', el.colorFondoDorsal||'#001824', el.colorFondoDorsalAlpha==null?1:el.colorFondoDorsalAlpha) : ''}` : ''}
-      ${fmtColorAlphaHtml('Color del texto','color','colorAlpha', el.color||'#ffffff', el.colorAlpha)}
-      ${fmtColorAlphaHtml('Color del dorsal','colorDorsal','colorDorsalAlpha', el.colorDorsal||'#ff27ff', el.colorDorsalAlpha)}
-      <label><input type="checkbox" data-p="fondoTextoActivo" ${el.fondoTextoActivo ? 'checked' : ''}> Caja de fondo en el texto</label>
-      ${el.fondoTextoActivo ? fmtColorAlphaHtml('Color de la caja','colorFondoTexto','colorFondoTextoAlpha', el.colorFondoTexto||'#001824', el.colorFondoTextoAlpha == null ? 1 : el.colorFondoTextoAlpha) : ''}
-      <label>Tamaño de fuente</label><input type="number" data-p="fontSize" value="${el.fontSize||16}">
-      <label><input type="checkbox" data-p="bold" ${el.bold?'checked':''}> Negrita</label>`;
-  }
-  if(el.tipo === 'texto'){
-    campos += `<label>Texto</label><input type="text" data-p="texto" value="${escapeHtml(el.texto||'')}">
-      ${fmtColorAlphaHtml('Color','color','colorAlpha', el.color||'#ffffff', el.colorAlpha)}
-      <label>Tamaño</label><input type="number" data-p="fontSize" value="${el.fontSize||32}">
-      <label>Alineación</label><select data-p="align">
-        <option value="left" ${el.align==='left'?'selected':''}>Izquierda</option>
-        <option value="center" ${el.align==='center'?'selected':''}>Centro</option>
-        <option value="right" ${el.align==='right'?'selected':''}>Derecha</option>
-      </select>
-      <label><input type="checkbox" data-p="bold" ${el.bold?'checked':''}> Negrita</label>`;
-  }
-  if(el.tipo === 'forma'){
-    campos += `${fmtColorAlphaHtml('Color','colorFondo','colorFondoAlpha', el.colorFondo||'#ff27ff', el.colorFondoAlpha)}
-      <label>Redondeo</label><input type="number" data-p="radio" value="${el.radio||0}">`;
-  }
-  box.innerHTML = campos;
-
-  box.querySelectorAll('[data-p]').forEach(input => {
-    const evento = (input.type === 'checkbox' || input.tagName === 'SELECT' || input.type === 'color') ? 'change' : 'input';
-    input.addEventListener(evento, () => {
-      const p = input.dataset.p;
-      let v = input.type === 'checkbox' ? input.checked : input.value;
-      if(['x','y','w','h','fontSize','radio','tarjetaW','tarjetaH','imgRadio','imgBordeAncho','imgPosX','imgPosY','sombraX','sombraY','sombraBlur','mascaraCorte','imgZoom'].includes(p)) v = parseFloat(v) || 0;
-      if(p.endsWith('Alpha')){
-        v = Math.max(0, Math.min(1, parseFloat(v) || 0));
-        const span = input.parentElement.querySelector('.alpha-val');
-        if(span) span.textContent = Math.round(v*100) + '%';
-      }
-      if(p === 'refJugadorNombre'){
-        el.refJugadorNombre = v;
-        const j = resolveJugadorPorTexto(v);
-        el.refJugadorId = j ? j.id : null;
-      } else {
-        el[p] = v;
-      }
-      // estos cambian qué controles se muestran, así que se redibuja el inspector
-      if(['modoImagen','fondoTextoActivo','imgMascara','imgSombra','imgBordeAncho','mostrarDorsal','mostrarNombre','fondoDorsalActivo'].includes(p)) fmtRender();
-      else fmtRenderSoloCanvas();
-    });
-  });
-  fmtEngancharSwatches(box, el, () => fmtRenderSoloCanvas());
-
-  // botones para elegir qué pieza de la tarjeta se edita
-  box.querySelectorAll('[data-sub-sel]').forEach(b => {
-    b.addEventListener('click', () => { fmtSelSub = b.dataset.subSel; fmtRender(); });
-  });
-  // campos de posición/tamaño/capa de la pieza seleccionada
-  if(el.tipo === 'modulo-formacion' && fmtSelSub){
-    const s = fmtSubs(el)[fmtSelSub];
-    box.querySelectorAll('[data-sub]').forEach(input => {
-      input.addEventListener('input', () => {
-        s[input.dataset.sub] = parseFloat(input.value) || 0;
-        fmtRenderSoloCanvas();
-      });
-    });
-  }
-  fmtNumerosArrastrables(box);
-  const modImgBtn = box.querySelector('#fmtModImagenBtn');
-  if(modImgBtn){
-    const inp = box.querySelector('#fmtModImagenInput');
-    modImgBtn.addEventListener('click', () => inp.click());
-    inp.addEventListener('change', async (e) => {
-      const file = e.target.files[0]; if(!file) return;
-      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-      const path = `mod_${flowicsDetailId}_${Date.now()}.${ext}`;
-      const { error } = await sb.storage.from('graficas').upload(path, file, { upsert:true, contentType:file.type });
-      if(error){ alert('Error subiendo la imagen: ' + error.message); return; }
-      const { data: pub } = sb.storage.from('graficas').getPublicUrl(path);
-      el.imagenFijaUrl = pub.publicUrl;
-      fmtRender();
-    });
-  }
-}
-
-// ---- agregar elementos (modo editor) ----
+// ---- agregar elementos ----
 document.querySelectorAll('#flowicsTipo-formacion [data-add]').forEach(btn => {
   btn.addEventListener('click', () => {
     const tipo = btn.dataset.add;
-    if(tipo === 'modulo-formacion' && fmtModulo()){ alert('Este diseño ya tiene un módulo de formación.'); return; }
-    const base = { id: fmtNuevoId(), tipo, x: 60, y: 60, visible: true };
-    if(tipo === 'modulo-formacion') Object.assign(base, { w:200, h:280, tarjetaW:200, tarjetaH:280, modoImagen:'foto',
-      colorTarjeta:'#0a2c3b', color:'#ffffff', colorDorsal:'#ff27ff', colorFondoTexto:'#001824',
-      fontSize:16, bold:true, mostrarNombre:true, mostrarDorsal:false });
-    if(tipo === 'texto') Object.assign(base, { w: 400, h: 60, texto:'Texto', color:'#ffffff', fontSize:32, align:'left', bold:true });
-    if(tipo === 'forma') Object.assign(base, { w: 300, h: 120, colorFondo:'#ff27ff', radio:8, opacidad:1 });
-    fmtDoc.elementos.push(base);
+    const base = { id: fmtNuevoId(), tipo, x:60, y:60, visible:true };
+    if(tipo === 'proveedor') Object.assign(base, { subtipo:'formacion', direccion:'vertical', separacion:8, w:0, h:0 });
+    if(tipo === 'grupo') Object.assign(base, { w:220, h:300, hijos:[], proveedorId:null });
+    if(tipo === 'texto') Object.assign(base, { w:300, h:50, texto:'Texto', campo:'', color:'#ffffff', fontSize:32, bold:true, align:'flex-start', vAlign:'center' });
+    if(tipo === 'forma') Object.assign(base, { w:300, h:120, colorFondo:'#ff27ff', radio:8 });
+    if(tipo === 'imagen') Object.assign(base, { w:220, h:280, campo:'', colorFondo:'#0a2c3b' });
+    // si hay un grupo seleccionado, el elemento entra dentro de ese grupo
+    const sel = fmtSelId ? fmtBuscar(fmtSelId) : null;
+    if(tipo === 'proveedor'){ fmtDoc.elementos.push(base); fmtSelId = base.id; fmtRender(); return; }
+    if(sel && sel.el.tipo === 'grupo' && tipo !== 'grupo'){
+      // el elemento entra dentro del grupo, ajustado para no salirse
+      base.x = 0; base.y = 0;
+      base.w = Math.min(base.w, sel.el.w);
+      base.h = Math.min(base.h, sel.el.h);
+      sel.el.hijos = sel.el.hijos || [];
+      sel.el.hijos.push(base);
+    } else {
+      fmtDoc.elementos.push(base);
+    }
     fmtSelId = base.id;
     fmtRender();
+    fmtGuardarHistorial();
   });
-});
-document.getElementById('fmtAddImagenBtn').addEventListener('click', () => document.getElementById('fmtImagenInput').click());
-document.getElementById('fmtImagenInput').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-  const path = `${flowicsDetailId}_${Date.now()}.${ext}`;
-  const { error } = await sb.storage.from('graficas').upload(path, file, { upsert: true, contentType: file.type });
-  if(error){ alert('Error subiendo la imagen: ' + error.message); return; }
-  const { data: pub } = sb.storage.from('graficas').getPublicUrl(path);
-  const el = { id: fmtNuevoId(), tipo:'imagen', x:60, y:60, w:400, h:300, url: pub.publicUrl, visible:true };
-  fmtDoc.elementos.push(el);
-  fmtSelId = el.id;
-  fmtRender();
-  e.target.value = '';
 });
 document.getElementById('fmtDeleteElBtn').addEventListener('click', () => {
   if(!fmtSelId) return;
-  fmtDoc.elementos = fmtDoc.elementos.filter(e => e.id !== fmtSelId);
+  const f = fmtBuscar(fmtSelId);
+  if(!f) return;
+  f.lista.splice(f.lista.indexOf(f.el), 1);
   fmtSelId = null;
   fmtRender();
+  fmtGuardarHistorial();
+});
+document.getElementById('fmtRefJugador').addEventListener('input', e => {
+  const j = resolveJugadorPorTexto(e.target.value);
+  fmtDoc.refJugadorId = j ? j.id : null;
+  const enInspector = document.querySelector('.fmt-ref-jug');
+  if(enInspector) enInspector.value = e.target.value;
+  fmtRenderSoloCanvas();
 });
 
-// ---- modo CONTROL: equipo, jugadores, limpiar ----
+// ---- lienzo: seleccionar, arrastrar, redimensionar ----
+(function fmtInitCanvasEvents(){
+  const canvas = document.getElementById('fmtCanvas');
+  let modo = null, startX = 0, startY = 0, orig = null, objetivo = null, origHijos = null;
+
+  canvas.addEventListener('mousedown', e => {
+    const handle = e.target.closest('.fmt-handle');
+    // en vivo se toma la tarjeta completa, aunque el clic caiga sobre la foto o el texto
+    const node = fmtModo === 'control'
+      ? (e.target.closest('[data-puesto="1"]') || e.target.closest('.fmt-el'))
+      : e.target.closest('.fmt-el');
+    if(!node){ fmtSelId = null; fmtRender(); return; }
+    const id = node.dataset.id;
+    const esPuesto = node.dataset.puesto === '1';
+
+    if(fmtModo === 'control'){
+      if(!esPuesto) return;                       // en vivo solo se mueven las filas de formación
+      Object.values(fmtDoc.filas || {}).forEach(arr => {
+        const f = arr.find(p => p.id === id); if(f) objetivo = f;
+      });
+    } else {
+      if(esPuesto) return;
+      const f = fmtBuscar(id);
+      if(!f) return;
+      objetivo = f.el;
+    }
+    if(!objetivo) return;
+    fmtSelId = id;
+    modo = handle ? 'resize' : 'move';
+    startX = e.clientX; startY = e.clientY;
+    orig = { x:objetivo.x, y:objetivo.y, w:objetivo.w, h:objetivo.h };
+    // si es un grupo, se guarda el estado de los hijos para escalarlos junto con el contenedor
+    origHijos = (objetivo.tipo === 'grupo' && objetivo.hijos)
+      ? JSON.parse(JSON.stringify(objetivo.hijos)) : null;
+    fmtRender();
+    e.preventDefault();
+    e.stopPropagation();
+  });
+
+  window.addEventListener('mousemove', e => {
+    if(!modo || !objetivo) return;
+    const dx = (e.clientX - startX) / fmtZoom, dy = (e.clientY - startY) / fmtZoom;
+    if(modo === 'move'){ objetivo.x = fmtAjustar(orig.x + dx); objetivo.y = fmtAjustar(orig.y + dy); }
+    else if(objetivo.w != null){
+      objetivo.w = Math.max(10, fmtAjustar(orig.w + dx));
+      objetivo.h = Math.max(10, fmtAjustar(orig.h + dy));
+      if(origHijos){
+        // los hijos acompañan el cambio de tamaño del grupo, en proporción
+        const fx = objetivo.w / orig.w, fy = objetivo.h / orig.h;
+        fmtEscalarHijos(objetivo.hijos, origHijos, fx, fy);
+      }
+    }
+    fmtRenderSoloCanvas();
+  });
+  window.addEventListener('mouseup', () => {
+    if(modo){ modo = null; objetivo = null; origHijos = null;
+      if(fmtModo === 'editor') fmtRenderInspector();
+      fmtGuardarHistorial();
+    }
+  });
+})();
+
+// redondea al paso de la cuadrícula si el ajuste está activo
+function fmtAjustar(v){
+  const on = document.getElementById('fmtSnapOn');
+  if(!on || !on.checked) return Math.round(v);
+  const paso = Math.max(1, parseInt(document.getElementById('fmtSnapPaso').value) || 10);
+  return Math.round(v / paso) * paso;
+}
+
+// escala posiciones, tamaños y tipografía de los hijos según cuánto cambió el grupo
+function fmtEscalarHijos(hijos, original, fx, fy){
+  hijos.forEach((h, i) => {
+    const o = original[i];
+    if(!o) return;
+    h.x = Math.round(o.x * fx);
+    h.y = Math.round(o.y * fy);
+    h.w = Math.max(4, Math.round(o.w * fx));
+    h.h = Math.max(4, Math.round(o.h * fy));
+    const f = Math.min(fx, fy);
+    if(o.fontSize) h.fontSize = Math.max(4, Math.round(o.fontSize * f));
+    if(o.radio) h.radio = Math.round(o.radio * f);
+    if(o.imgRadio) h.imgRadio = Math.round(o.imgRadio * f);
+    if(h.tipo === 'grupo' && h.hijos && o.hijos) fmtEscalarHijos(h.hijos, o.hijos, fx, fy);
+  });
+}
+
+['fmtCanvasW','fmtCanvasH'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    fmtDoc.canvas.w = parseInt(document.getElementById('fmtCanvasW').value) || 1920;
+    fmtDoc.canvas.h = parseInt(document.getElementById('fmtCanvasH').value) || 1080;
+    fmtRender();
+  });
+});
+document.getElementById('fmtZoomSel').addEventListener('change', e => { fmtZoomManual = e.target.value; fmtRender(); });
+document.getElementById('fmtCanvasBg').addEventListener('change', e => { fmtDoc.canvas.bg = e.target.value; fmtRenderSoloCanvas(); });
+document.getElementById('fmtCanvasTransp').addEventListener('change', e => { fmtDoc.canvas.transparente = e.target.checked; fmtRenderSoloCanvas(); });
+
+// ---- modo CONTROL ----
 async function fmtCtrlInit(){
   const campSel = document.getElementById('fmtCtrlCamp');
   campSel.innerHTML = '<option value="">— elige uno —</option>' +
@@ -3564,145 +4008,98 @@ async function fmtCtrlInit(){
       await fmtCtrlCargarPlantel(fmtDoc.formacion.equipoId);
     }
   }
+  fmtCtrlRenderProveedores();
   fmtCtrlActualizarInfo();
 }
 async function fmtCtrlCargarEquipos(campId){
-  const sel = document.getElementById('fmtCtrlEquipo');
-  const { data: eqs } = await sb.from('equipos')
-    .select('id,nombre,clubes(nombre)')
+  const { data: eqs } = await sb.from('equipos').select('id,nombre,clubes(nombre,escudo_url)')
     .eq('campeonato_id', campId).order('nombre').limit(500);
-  sel.innerHTML = '<option value="">— elige un equipo —</option>' +
-    (eqs||[]).map(e => `<option value="${e.id}">${escapeHtml((e.clubes&&e.clubes.nombre)||e.nombre)}</option>`).join('');
+  fmtCtrlEquipos = eqs || [];
+  document.getElementById('fmtCtrlEquipo').innerHTML = '<option value="">— elige un equipo —</option>' +
+    fmtCtrlEquipos.map(e => `<option value="${e.id}">${escapeHtml((e.clubes&&e.clubes.nombre)||e.nombre)}</option>`).join('');
 }
+let fmtCtrlEquipos = [];
 async function fmtCtrlCargarPlantel(equipoId){
+  fmtCtrlEquipoActual = fmtCtrlEquipos.find(e => e.id === equipoId) || null;
+  if(fmtCtrlEquipoActual && fmtCtrlEquipoActual.clubes) fmtCtrlEquipoActual.nombre = fmtCtrlEquipoActual.clubes.nombre;
   const { data } = await sb.from('plantel_jugadores')
-    .select('id,n,nombre,jugador_id,jugadores_maestro!jugador_id(nombre_tv)')
+    .select('id,n,nombre,nacionalidad,jugador_id,jugadores_maestro!jugador_id(nombre_tv,nacionalidad)')
     .eq('equipo_id', equipoId).limit(200);
   fmtCtrlJugadores = (data||[]).map(p => ({
-    ...p, nombre: (p.jugadores_maestro && p.jugadores_maestro.nombre_tv) || p.nombre
+    ...p,
+    nombre: (p.jugadores_maestro && p.jugadores_maestro.nombre_tv) || p.nombre,
+    nacionalidad: (p.jugadores_maestro && p.jugadores_maestro.nacionalidad) || p.nacionalidad,
   })).sort((a,b) => (parseInt(a.n)||99) - (parseInt(b.n)||99));
   fmtRenderPanelIzq();
 }
-document.getElementById('fmtCtrlCamp').addEventListener('change', async (e) => {
+document.getElementById('fmtCtrlCamp').addEventListener('change', async e => {
   fmtDoc.formacion.campId = e.target.value || null;
-  fmtDoc.formacion.equipoId = null;
-  fmtCtrlJugadores = [];
+  fmtDoc.formacion.equipoId = null; fmtCtrlJugadores = [];
   document.getElementById('fmtCtrlEquipo').innerHTML = '<option value="">— elige un equipo —</option>';
   if(e.target.value) await fmtCtrlCargarEquipos(e.target.value);
   fmtRenderPanelIzq();
 });
-document.getElementById('fmtCtrlEquipo').addEventListener('change', async (e) => {
+document.getElementById('fmtCtrlEquipo').addEventListener('change', async e => {
   fmtDoc.formacion.equipoId = e.target.value || null;
   fmtCtrlJugadores = [];
   if(e.target.value) await fmtCtrlCargarPlantel(e.target.value);
-  fmtRenderPanelIzq();
-});
-function fmtCtrlAgregarJugador(j){
-  const mod = fmtModulo();
-  if(!mod){ alert('Primero agrega un módulo de formación en el modo Editor.'); return; }
-  if(fmtDoc.formacion.puestos.some(p => p.jugadorId === j.jugador_id)) return;
-  const n = fmtDoc.formacion.puestos.length;
-  fmtDoc.formacion.puestos.push({
-    id: fmtNuevoId(), jugadorId: j.jugador_id, nombre: j.nombre, dorsal: j.n || '',
-    x: mod.x + (n % 5) * ((mod.tarjetaW||200) + 20),
-    y: mod.y + Math.floor(n / 5) * ((mod.tarjetaH||280) + 20),
-  });
   fmtRender();
-  fmtCtrlActualizarInfo();
+});
+function fmtProveedorActivo(){
+  const provs = fmtProveedores();
+  if(!provs.length) return null;
+  const sel = document.getElementById('fmtCtrlProveedor').value;
+  return provs.find(p => p.id === sel) || provs[0];
+}
+function fmtGrupoDe(prov){
+  let res = null;
+  fmtRecorrer(fmtDoc.elementos, el => { if(el.tipo === 'grupo' && el.proveedorId === prov.id && !res) res = el; });
+  return res;
+}
+function fmtCtrlAgregarJugador(j){
+  const prov = fmtProveedorActivo();
+  if(!prov){ alert('Primero agrega un proveedor en el modo Editor y conéctale un grupo.'); return; }
+  const g = fmtGrupoDe(prov);
+  if(!g){ alert('Ese proveedor no tiene ningún grupo conectado. Conéctalo en el modo Editor.'); return; }
+  const filas = fmtFilas(prov.id);
+  if(filas.some(p => p.jugadorId === j.jugador_id)) return;
+  const n = filas.length;
+  filas.push({
+    id: fmtNuevoId(), jugadorId: j.jugador_id, nombre: j.nombre, dorsal: j.n || '',
+    nacionalidad: j.nacionalidad || '',
+    x: g.x + (n % 5) * (g.w + 20), y: g.y + Math.floor(n / 5) * (g.h + 20),
+  });
+  fmtRender(); fmtCtrlActualizarInfo();
+}
+function fmtCtrlRenderProveedores(){
+  const sel = document.getElementById('fmtCtrlProveedor');
+  const provs = fmtProveedores();
+  const previo = sel.value;
+  sel.innerHTML = provs.length
+    ? provs.map(p => `<option value="${p.id}">${escapeHtml(p.nombre || (p.subtipo==='lista'?'Lista':'Formación'))}</option>`).join('')
+    : '<option value="">— sin proveedores —</option>';
+  if(previo && provs.some(p => p.id === previo)) sel.value = previo;
 }
 function fmtCtrlActualizarInfo(){
-  document.getElementById('fmtCtrlInfo').textContent = `${fmtDoc.formacion.puestos.length} en cancha`;
+  const prov = fmtProveedorActivo();
+  const n = prov ? fmtFilas(prov.id).length : 0;
+  document.getElementById('fmtCtrlInfo').textContent = prov ? `${n} en pantalla` : 'sin proveedores';
 }
 document.getElementById('fmtCtrlLimpiarBtn').addEventListener('click', () => {
-  if(!fmtDoc.formacion.puestos.length) return;
-  if(!confirm('¿Sacar a todos los jugadores de la cancha? El diseño no se toca.')) return;
-  fmtDoc.formacion.puestos = [];
-  fmtSelId = null;
-  fmtRender();
-  fmtCtrlActualizarInfo();
+  const prov = fmtProveedorActivo();
+  if(!prov || !fmtFilas(prov.id).length) return;
+  if(!confirm('¿Vaciar este proveedor? El diseño no se toca.')) return;
+  fmtDoc.filas[prov.id] = []; fmtSelId = null;
+  fmtRender(); fmtCtrlActualizarInfo();
 });
+document.getElementById('fmtCtrlProveedor').addEventListener('change', () => { fmtRender(); fmtCtrlActualizarInfo(); });
 
-// ---- lienzo: seleccionar, arrastrar, redimensionar ----
-(function fmtInitCanvasEvents(){
-  const canvas = document.getElementById('fmtCanvas');
-  let modo = null, startX = 0, startY = 0, orig = null, objetivo = null;
-
-  function buscarObjetivo(id, esPuesto){
-    return esPuesto ? fmtDoc.formacion.puestos.find(p => p.id === id)
-                    : fmtDoc.elementos.find(x => x.id === id);
-  }
-  canvas.addEventListener('mousedown', (e) => {
-    const handle = e.target.closest('.fmt-handle');
-    const node = e.target.closest('.fmt-el');
-    if(!node){ fmtSelId = null; fmtSelSub = null; fmtRender(); return; }
-    const esPuesto = node.dataset.puesto === '1';
-    const obj = buscarObjetivo(node.dataset.id, esPuesto);
-    if(!obj) return;
-    // en modo control solo se mueven los jugadores puestos; en editor, todo lo demás
-    if(fmtModo === 'control' && !esPuesto) return;
-    if(fmtModo === 'editor' && esPuesto) return;
-
-    // dentro de la tarjeta de muestra: mover la pieza (foto, nombre o dorsal)
-    const subNode = e.target.closest('.fmt-sub');
-    if(fmtModo === 'editor' && obj.tipo === 'modulo-formacion' && subNode && !handle){
-      fmtSelId = obj.id;
-      fmtSelSub = subNode.dataset.sub;
-      const s = fmtSubs(obj)[fmtSelSub];
-      objetivo = s; modo = 'move';
-      startX = e.clientX; startY = e.clientY;
-      orig = { x:s.x, y:s.y, w:s.w, h:s.h };
-      fmtRender();
-      e.preventDefault();
-      return;
-    }
-    fmtSelSub = null;
-    fmtSelId = obj.id;
-    objetivo = obj;
-    modo = handle ? 'resize' : 'move';
-    startX = e.clientX; startY = e.clientY;
-    orig = obj.tipo === 'modulo-formacion'
-      ? { x: obj.x, y: obj.y, w: obj.tarjetaW||200, h: obj.tarjetaH||280 }
-      : { x: obj.x, y: obj.y, w: obj.w, h: obj.h };
-    fmtRender();
-    e.preventDefault();
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if(!modo || !objetivo) return;
-    const dx = (e.clientX - startX) / fmtZoom;
-    const dy = (e.clientY - startY) / fmtZoom;
-    if(modo === 'move'){ objetivo.x = Math.round(orig.x + dx); objetivo.y = Math.round(orig.y + dy); }
-    else if(fmtSelSub && objetivo && objetivo.z != null){
-      objetivo.w = Math.max(10, Math.round(orig.w + dx));
-      objetivo.h = Math.max(10, Math.round(orig.h + dy));
-    }
-    else if(objetivo.tipo === 'modulo-formacion'){
-      objetivo.tarjetaW = Math.max(20, Math.round(orig.w + dx));
-      objetivo.tarjetaH = Math.max(20, Math.round(orig.h + dy));
-    }
-    else if(objetivo.w != null){ objetivo.w = Math.max(20, Math.round(orig.w + dx)); objetivo.h = Math.max(20, Math.round(orig.h + dy)); }
-    fmtRenderSoloCanvas();
-  });
-  window.addEventListener('mouseup', () => { if(modo){ modo = null; objetivo = null; if(fmtModo === 'editor') fmtRenderInspector(); } });
-})();
-
-// ---- lienzo: tamaño y fondo ----
-['fmtCanvasW','fmtCanvasH'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => {
-    fmtDoc.canvas.w = parseInt(document.getElementById('fmtCanvasW').value) || 1920;
-    fmtDoc.canvas.h = parseInt(document.getElementById('fmtCanvasH').value) || 1080;
-    fmtRender();
-  });
-});
-document.getElementById('fmtCanvasBg').addEventListener('change', (e) => { fmtDoc.canvas.bg = e.target.value; fmtRenderSoloCanvas(); });
-document.getElementById('fmtCanvasTransp').addEventListener('change', (e) => { fmtDoc.canvas.transparente = e.target.checked; fmtRenderSoloCanvas(); });
-
-// ---- guardar y link de output ----
+// ---- guardar y link ----
 async function fmtGuardar(mensaje){
   const ctrl = flowicsControles.find(c => c.id === flowicsDetailId);
   if(!ctrl) return;
   const config = { ...(ctrl.config||{}), doc: fmtDoc };
-  const { error } = await sb.from('flowics_controles').update({ config, updated_at: new Date().toISOString() }).eq('id', ctrl.id);
+  const { error } = await sb.from('flowics_controles').update({ config, updated_at:new Date().toISOString() }).eq('id', ctrl.id);
   if(error){ alert('Error guardando: ' + error.message); return; }
   ctrl.config = config;
   alert(mensaje);
@@ -3710,8 +4107,7 @@ async function fmtGuardar(mensaje){
 document.getElementById('fmtSaveBtn').addEventListener('click', () => fmtGuardar('Diseño guardado.'));
 document.getElementById('fmtCtrlGuardarBtn').addEventListener('click', () => fmtGuardar('Formación guardada — ya se ve al aire.'));
 function fmtMostrarLinkOutput(){
-  const url = location.origin + location.pathname + '?output=' + flowicsDetailId;
-  prompt('Pega esta URL como external content en Flowics:', url);
+  prompt('Pega esta URL como external content en Flowics:', location.origin + location.pathname + '?output=' + flowicsDetailId);
 }
 document.getElementById('fmtOutputBtn').addEventListener('click', fmtMostrarLinkOutput);
 document.getElementById('fmtCtrlOutputBtn').addEventListener('click', fmtMostrarLinkOutput);
@@ -3745,15 +4141,9 @@ async function initOutputMode(controlId){
 
     // escala el diseño para que ocupe la ventana manteniendo la proporción
     const escala = Math.min(window.innerWidth / doc.canvas.w, window.innerHeight / doc.canvas.h);
-    const mod = doc.elementos.find(e => e.tipo === 'modulo-formacion');
-    const puestos = (doc.formacion && doc.formacion.puestos) || [];
-    const piezas = doc.elementos.filter(el => el.visible !== false).map(el => {
-      if(el.tipo === 'modulo-formacion'){
-        // el módulo dibuja a los jugadores que estén puestos en la cancha
-        return puestos.map(p => `<div class="fmt-el fmt-el-jugador" style="position:absolute;left:${p.x}px;top:${p.y}px;width:${el.tarjetaW||200}px;height:${el.tarjetaH||280}px;">${fmtTarjetaJugadorHtml(p, el)}</div>`).join('');
-      }
-      return `<div class="fmt-el fmt-el-${el.tipo}" style="position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;">${fmtContenidoHtml(el)}</div>`;
-    }).join('');
+    fmtDoc = doc;   // fmtNodosHtml lee del documento
+    const datos = { nombre:'', dorsal:'', nacionalidad:'', club: doc.clubNombre || '', jugadorId:null, escudoUrl: doc.escudoUrl || '' };
+    const piezas = fmtNodosHtml(doc.elementos || [], datos, { selId:null, enVivo:true });
     cont.innerHTML = `<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(${escala});width:${doc.canvas.w}px;height:${doc.canvas.h}px;background:${doc.canvas.transparente?'transparent':fmtRgba(doc.canvas.bg, doc.canvas.bgAlpha)};">${piezas}</div>`;
   }
   await pintar();
